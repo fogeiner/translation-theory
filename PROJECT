@@ -1,0 +1,14 @@
+The project plan
+
+Goal
+The goal is to implement some subset of the bc utility functionality described in IEEE P1003.2 Draft 11.2 -- September 1991
+
+Branching
+There will be several branches; major functionality is added by creating new branch using the current one and switching to it's development.
+
+1. calculator
+2. 1) with variables
+3. 2) with conditions and loops 
+4. 3) with functions
+5. 4) with arbirtary precision
+
