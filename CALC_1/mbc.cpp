@@ -239,7 +239,7 @@ int main(int argc, char** argv) {
     }
 
 
-    Logger::setLevel(Logger::DEBUG);
+    Logger::setLevel(Logger::ERROR);
 
     try {
         Tokenizer tokenizer(input);
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
                 addKeyword("return");
 
         tokenizer.nextToken();
-        cout << "Value is " << parseExpr(tokenizer);
+        cout << "Value is " << parseExpr(tokenizer) << endl;
 
         for (tokenizer.nextToken();
                 tokenizer.getTokenType() != Tokenizer::T_EOF;

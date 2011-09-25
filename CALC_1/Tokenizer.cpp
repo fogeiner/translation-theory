@@ -5,7 +5,7 @@
 #include "create_map.h"
 #include "utils.h"
 
-//#define DEBUG_LOG_OFF
+#define DEBUG_LOG_OFF
 #include "Logger.h"
 
 
