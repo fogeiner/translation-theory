@@ -5,7 +5,7 @@
 #include "create_map.h"
 #include "utils.h"
 
-#define DEBUG_LOG_OFF
+//#define DEBUG_LOG_OFF
 #include "Logger.h"
 
 
@@ -159,7 +159,7 @@ void Tokenizer::nextToken() {
         int symbol = _stream.get();
         // operations, EOF, / -> // | /*
         if (_stream.eof()) {
-            token = symbol;
+            token = "";
             _type = T_EOF;
         } else if (isspace(symbol)) {
             while (isspace(symbol) && !_stream.eof()) {
