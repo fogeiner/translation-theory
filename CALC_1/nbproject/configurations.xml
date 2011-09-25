@@ -6,16 +6,16 @@
                    projectFiles="true">
       <itemPath>Logger.cpp</itemPath>
       <itemPath>Tokenizer.cpp</itemPath>
-      <itemPath>Tokenizer.h</itemPath>
-      <itemPath>create_map.h</itemPath>
       <itemPath>mbc.cpp</itemPath>
       <itemPath>utils.cpp</itemPath>
-      <itemPath>utils.h</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Файлы заголовков"
                    projectFiles="true">
       <itemPath>Logger.h</itemPath>
+      <itemPath>Tokenizer.h</itemPath>
+      <itemPath>create_map.h</itemPath>
+      <itemPath>utils.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Файлы ресурсов"

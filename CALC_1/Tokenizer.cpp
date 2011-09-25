@@ -3,8 +3,11 @@
 #include <vector>
 #include "Tokenizer.h"
 #include "create_map.h"
-#include "Logger.h"
 #include "utils.h"
+
+#define DEBUG_LOG_OFF
+#include "Logger.h"
+
 
 using std::istream;
 using std::string;
@@ -26,8 +29,8 @@ const char *TokenizerException::what() const throw () {
 LocatableStream::LocatableStream(std::istream *stream) :
 _stream(stream),
 canUnget(false),
-lineNumber(0),
-linePosition(0) {
+lineNumber(1),
+linePosition(1) {
 }
 
 int LocatableStream::get() {
@@ -52,8 +55,7 @@ int LocatableStream::get() {
 void LocatableStream::unget() {
     DEBUG(fmt("unget() %d (%c)", lastSymbol, lastSymbol));
     if (!canUnget) {
-        ERROR("Can't unget with no get before");
-        exit(1);
+        CRITICAL("Can't unget with no get before");
     }
     if (lastSymbol == '\n') {
         lineNumber--;
@@ -71,14 +73,14 @@ bool LocatableStream::eof() const {
 }
 
 int LocatableStream::getLineNumber() const {
-    if (lastSymbol == '\n') {
+    if (lastSymbol == '\n' && canUnget) {
         return lineNumber - 1;
     }
     return lineNumber;
 }
 
 int LocatableStream::getLinePosition() const {
-    if (lastSymbol == '\n')
+    if (lastSymbol == '\n' && canUnget)
         return lastPosition;
     return linePosition;
 }
@@ -87,7 +89,8 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
         create_map<Tokenizer::ValueType, string>
         (T_UNDEFINED, "Undefined symbol")
 (T_WORD, "Word")
-(T_NUMBER, "Number")
+(T_INTEGER, "Integer")
+(T_REAL, "Real")
 (T_PLUS, "Plus")
 (T_MINUS, "Minus")
 (T_MULT, "Multiplication")
@@ -95,7 +98,6 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_POWER, "Power")
 (T_MOD, "Mod")
 (T_EQUALS, "Equals")
-(T_EOL, "End Of Line")
 (T_SEMICOLON, "Semicolon")
 (T_OPENING_RBRACKET, "Opening round bracket")
 (T_CLOSING_RBRACKET, "Closing round bracket")
@@ -107,23 +109,38 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 Tokenizer::Tokenizer(istream *stream) :
 _stream(stream),
 _type(Tokenizer::T_UNDEFINED) {
+    _enabledTokens = create_map < Tokenizer::ValueType, bool>
+            (T_UNDEFINED, false)
+            (T_WORD, false)
+            (T_INTEGER, false)
+            (T_REAL, false)
+            (T_PLUS, false)
+            (T_MINUS, false)
+            (T_MULT, false)
+            (T_DIV, false)
+            (T_POWER, false)
+            (T_MOD, false)
+            (T_EQUALS, false)
+            (T_SEMICOLON, false)
+            (T_OPENING_RBRACKET, false)
+            (T_CLOSING_RBRACKET, false)
+            (T_OPENING_CBRACKET, false)
+            (T_CLOSING_CBRACKET, false)
+            (T_EOF, false)
+            (T_KEYWORD, false);
 }
 
-double Tokenizer::getNumericValue() const {
-    return atof(this->_token.c_str());
-}
-
-string Tokenizer::getStringValue() const {
+string Tokenizer::getToken() const {
     return this->_token;
 }
 
 int Tokenizer::lineNumber() const {
-    return _stream.getLineNumber() + 1;
+    return _stream.getLineNumber();
 }
 
 int Tokenizer::linePosition() const {
 
-    return _stream.getLinePosition() - _token.length() + 1;
+    return _stream.getLinePosition() - _token.length();
 }
 
 Tokenizer &Tokenizer::addKeyword(const string keyword) {
@@ -131,172 +148,143 @@ Tokenizer &Tokenizer::addKeyword(const string keyword) {
     return *this;
 }
 
-Tokenizer::ValueType Tokenizer::nextToken() {
+Tokenizer &Tokenizer::setTokenMode(Tokenizer::ValueType type, bool enabled) {
+    _enabledTokens[type] = enabled;
+    return *this;
+}
 
+void Tokenizer::nextToken() {
     string token;
-
-    enum states {
-        INIT,
-        NUMBER,
-        WORD,
-        LINE_COMMENT,
-        MULTILINE_COMMENT
-    };
-    states state = INIT;
-
-    bool dotOn = false;
-
-    DEBUG("State INIT");
     while (true) {
-        int symbol;
-        symbol = _stream.get();
-
+        int symbol = _stream.get();
+        // operations, EOF, / -> // | /*
         if (_stream.eof()) {
-            if (state == NUMBER) {
-                _token = token;
-                return Tokenizer::T_NUMBER;
-            } else if (state == WORD) {
-                _token = token;
-                // check if keyword
-                for (vector<string>::iterator iter = _keywords.begin();
-                        iter != _keywords.end();
-                        ++iter) {
-                    if (_token == (*iter)) {
-                        return T_KEYWORD;
-                    }
-                }
-                return Tokenizer::T_WORD;
-            } else {
-                return Tokenizer::T_EOF;
+            token = symbol;
+            _type = T_EOF;
+        } else if (isspace(symbol)) {
+            while (isspace(symbol) && !_stream.eof()) {
+                symbol = _stream.get();
             }
-        }
+            _stream.unget();
+            continue;
+        } else if (symbol == '+') {
+            token = symbol;
+            _type = T_PLUS;
+        } else if (symbol == '-') {
+            token = symbol;
+            _type = T_MINUS;
+        } else if (symbol == '*') {
+            token = symbol;
+            _type = T_MULT;
+        } else if (symbol == '^') {
+            token = symbol;
+            _type = T_POWER;
+        } else if (symbol == '%') {
+            token = symbol;
+            _type = T_MOD;
+        } else if (symbol == '=') {
+            token = symbol;
+            _type = T_EQUALS;
+        } else if (symbol == ';') {
+            token = symbol;
+            _type = T_SEMICOLON;
+        } else if (symbol == '(') {
+            token = symbol;
+            _type = T_OPENING_RBRACKET;
+        } else if (symbol == ')') {
+            token = symbol;
+            _type = T_CLOSING_RBRACKET;
+        } else if (symbol == '{') {
+            token = symbol;
+            _type = T_OPENING_CBRACKET;
+        } else if (symbol == '}') {
+            token = symbol;
+            _type = T_CLOSING_CBRACKET;
+        } else if (symbol == '#') {
+            // line comment
+            while ((symbol != '\n') && !_stream.eof()) {
+                symbol = _stream.get();
+            }
+            _stream.unget();
+            continue;
+        } else if (symbol == '/') {
+            int next_symbol = _stream.get();
 
-        DEBUG(fmt("Read symbol %d (%c)", symbol, symbol));
-
-        if (state == INIT) {
-            // skipping whitespace
-            if (isblank(symbol)) {
-                DEBUG("Skipping space or tab");
+            if (next_symbol == '/') {
+                // line comment
+                while ((symbol != '\n') && !_stream.eof()) {
+                    symbol = _stream.get();
+                }
+                _stream.unget();
                 continue;
-            }
-
-            int next_symbol = _stream.get();
-            _stream.unget();
-
-            DEBUG(fmt("Next symbol is %d (%c)", next_symbol, next_symbol));
-
-            if (isalpha(symbol)) {
-                token += symbol;
-                DEBUG("State WORD");
-                state = WORD;
-            } else if (isdigit(symbol) || symbol == '.') {
-                dotOn = (symbol == '.');
-                token += symbol;
-                DEBUG("State NUMBER");
-                state = NUMBER;
-            } else if (symbol == '#' || (symbol == '/' && next_symbol == '/')) {
-                _stream.get();
-                state = LINE_COMMENT;
-                DEBUG("State LINE_COMMENT");
-            } else if (symbol == '/' && next_symbol == '*') {
-                _stream.get();
-                state = MULTILINE_COMMENT;
-                DEBUG("State MULTILINE_COMMENT");
-            } else if (symbol == '+') {
-                _token = symbol;
-                return T_PLUS;
-            } else if (symbol == '-') {
-                _token = symbol;
-                return T_MINUS;
-            } else if (symbol == '*') {
-                _token = symbol;
-                return T_MULT;
-            } else if (symbol == '/') {
-                _token = symbol;
-                return T_DIV;
-            } else if (symbol == '^') {
-                _token = symbol;
-                return T_POWER;
-            } else if (symbol == '%') {
-                _token = symbol;
-                return T_MOD;
-            } else if (symbol == '=') {
-                _token = symbol;
-                return T_EQUALS;
-            } else if (symbol == '\n') {
-                _token = symbol;
-                return T_EOL;
-            } else if (symbol == ';') {
-                _token = symbol;
-                return T_SEMICOLON;
-            } else if (symbol == '(') {
-                _token = symbol;
-                return T_OPENING_RBRACKET;
-            } else if (symbol == ')') {
-                _token = symbol;
-                return T_CLOSING_RBRACKET;
-            } else if (symbol == '{') {
-                _token = symbol;
-                return T_OPENING_CBRACKET;
-            } else if (symbol == '}') {
-                _token = symbol;
-                return T_CLOSING_CBRACKET;
-            } else {
-                ERROR(fmt("Don't know how to handle %d (%c) on %d:%d",
-                        symbol, symbol, _stream.getLineNumber(), _stream.getLinePosition()));
-                exit(1);
-            }
-
-        } else if (state == NUMBER) {
-            if (isdigit(symbol)) {
-                token += symbol;
-            } else if (symbol == '.') {
-                if (dotOn != true) {
-                    dotOn = true;
-                    token += symbol;
-                } else {
-                    // error
-                    token += symbol;
-                    _token = token;
-                    return T_UNDEFINED;
+            } else if (next_symbol == '*') {
+                symbol = _stream.get();
+                next_symbol = _stream.get();
+                while ((symbol != '*') || (next_symbol != '/') && !_stream.eof()) {
+                    symbol = next_symbol;
+                    next_symbol = _stream.get();
                 }
+
+                continue;
             } else {
                 _stream.unget();
-                _token = token;
-                return T_NUMBER;
+                token = symbol;
+                _type = T_DIV;
             }
-        } else if (state == WORD) {
-            if (isalnum(symbol)) {
+        } else if (isdigit(symbol) || symbol == '.') {
+            int penalty = (symbol == '.') ? 1 : 0;
+            token += symbol;
+            symbol = _stream.get();
+            while ((isdigit(symbol) || symbol == '.') && !_stream.eof()) {
                 token += symbol;
-            } else {
-                _stream.unget();
-                _token = token;
-                // check if keyword
-                for (vector<string>::iterator iter = _keywords.begin();
-                        iter != _keywords.end();
-                        ++iter) {
-                    if (_token == (*iter)) {
-                        return T_KEYWORD;
+                if (symbol == '.') {
+                    penalty += 1;
+                    if (penalty > 1) {
+                        break;
                     }
                 }
-                return T_WORD;
+                symbol = _stream.get();
             }
-        } else if (state == LINE_COMMENT) {
-            if (symbol == '\n') {
-                state = INIT;
-            }
-        } else if (state == MULTILINE_COMMENT) {
-            int next_symbol = _stream.get();
+            // if things like 100abc are forbidden,
+            // here should be some check that symbol is
+            // a delimiter, an operation or a comment
             _stream.unget();
-            if ((symbol == '*') && (next_symbol == '/')) {
-                _stream.get();
-                state = INIT;
+            if (penalty == 0) {
+                _type = T_INTEGER;
+            } else if (penalty == 1) {
+                _type = T_REAL;
+            } else {
+                _type = T_UNDEFINED;
+            }
+        } else if (isalpha(symbol) || symbol == '_') {
+            token += symbol;
+            symbol = _stream.get();
+            while ((isalnum(symbol) || symbol == '_') && !_stream.eof()) {
+                token += symbol;
+                symbol = _stream.get();
+            }
+            _stream.unget();
+
+            _type = T_WORD;
+            for (vector<string>::iterator iter = _keywords.begin();
+                    iter != _keywords.end();
+                    ++iter) {
+                if ((*iter) == token) {
+                    _type = T_KEYWORD;
+                }
             }
         } else {
-            assert(false);
+            token += symbol;
+            _type = T_UNDEFINED;
         }
 
+        _token = token;
+        return;
     }
+}
+
+Tokenizer::ValueType Tokenizer::getTokenType() {
+    return _type;
 }
 
 const std::string Tokenizer::getTokenTag(ValueType valueType) const {
