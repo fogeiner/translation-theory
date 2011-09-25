@@ -271,6 +271,7 @@ void Tokenizer::nextToken() {
                     ++iter) {
                 if ((*iter) == token) {
                     _type = T_KEYWORD;
+                    break;
                 }
             }
         } else {
