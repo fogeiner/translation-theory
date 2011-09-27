@@ -34,6 +34,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/ArithmeticsParser.o \
 	${OBJECTDIR}/mbc.o \
 	${OBJECTDIR}/Tokenizer.o \
 	${OBJECTDIR}/utils.o \
@@ -63,6 +64,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/calc_1: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/calc_1 ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/ArithmeticsParser.o: ArithmeticsParser.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ArithmeticsParser.o ArithmeticsParser.cpp
 
 ${OBJECTDIR}/mbc.o: mbc.cpp 
 	${MKDIR} -p ${OBJECTDIR}

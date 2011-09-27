@@ -26,63 +26,64 @@ const char *TokenizerException::what() const throw () {
     return _msg.c_str();
 }
 
-LocatableStream::LocatableStream(std::istream *stream) :
+LocatableStream::LocatableStream(std::istream &stream) :
 _stream(stream),
-canUnget(false),
-lineNumber(1),
-linePosition(1) {
+_canUnget(false),
+_lineNumber(1),
+_linePosition(1) {
+
 }
 
 int LocatableStream::get() {
-    int symbol = _stream->get();
+    int symbol = _stream.get();
     DEBUG(fmt("get() %d (%c)", symbol, symbol));
 
     if (symbol == '\n') {
-        lineNumber++;
-        lastPosition = linePosition;
-        linePosition = 0;
-    } else if (!_stream->eof()) {
-        linePosition++;
+        _lineNumber++;
+        _lastPosition = _linePosition;
+        _linePosition = 0;
+    } else if (!_stream.eof()) {
+        _linePosition++;
     }
 
-    lastSymbol = symbol;
-    canUnget = true;
-    DEBUG(fmt("(%d,%d)", lineNumber, linePosition));
+    _lastSymbol = symbol;
+    _canUnget = true;
+    DEBUG(fmt("(%d,%d)", _lineNumber, _linePosition));
 
     return symbol;
 }
 
 void LocatableStream::unget() {
-    DEBUG(fmt("unget() %d (%c)", lastSymbol, lastSymbol));
-    if (!canUnget) {
+    DEBUG(fmt("unget() %d (%c)", _lastSymbol, _lastSymbol));
+    if (!_canUnget) {
         CRITICAL("Can't unget with no get before");
     }
-    if (lastSymbol == '\n') {
-        lineNumber--;
-        linePosition = lastPosition;
-    } else if (!_stream->eof()) {
-        linePosition--;
+    if (_lastSymbol == '\n') {
+        _lineNumber--;
+        _linePosition = _lastPosition;
+    } else if (!_stream.eof()) {
+        _linePosition--;
     }
-    canUnget = false;
-    DEBUG(fmt("(%d,%d)", lineNumber, linePosition));
-    _stream->unget();
+    _canUnget = false;
+    DEBUG(fmt("(%d,%d)", _lineNumber, _linePosition));
+    _stream.unget();
 }
 
 bool LocatableStream::eof() const {
-    return _stream->eof();
+    return _stream.eof();
 }
 
 int LocatableStream::getLineNumber() const {
-    if (lastSymbol == '\n' && canUnget) {
-        return lineNumber - 1;
+    if (_lastSymbol == '\n' && _canUnget) {
+        return _lineNumber - 1;
     }
-    return lineNumber;
+    return _lineNumber;
 }
 
 int LocatableStream::getLinePosition() const {
-    if (lastSymbol == '\n' && canUnget)
-        return lastPosition;
-    return linePosition;
+    if (_lastSymbol == '\n' && _canUnget)
+        return _lastPosition;
+    return _linePosition;
 }
 
 map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
@@ -106,28 +107,13 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_EOF, "End Of File")
 (T_KEYWORD, "Keyword");
 
-Tokenizer::Tokenizer(istream *stream) :
-_stream(stream),
+Tokenizer::Tokenizer(istream &stream) :
 _type(Tokenizer::T_UNDEFINED) {
-    _enabledTokens = create_map < Tokenizer::ValueType, bool>
-            (T_UNDEFINED, false)
-            (T_WORD, false)
-            (T_INTEGER, false)
-            (T_REAL, false)
-            (T_PLUS, false)
-            (T_MINUS, false)
-            (T_MULT, false)
-            (T_DIV, false)
-            (T_POWER, false)
-            (T_MOD, false)
-            (T_EQUALS, false)
-            (T_SEMICOLON, false)
-            (T_OPENING_RBRACKET, false)
-            (T_CLOSING_RBRACKET, false)
-            (T_OPENING_CBRACKET, false)
-            (T_CLOSING_CBRACKET, false)
-            (T_EOF, false)
-            (T_KEYWORD, false);
+    _stream = new LocatableStream(stream);
+}
+
+Tokenizer::~Tokenizer() {
+    delete _stream;
 }
 
 string Tokenizer::getToken() const {
@@ -135,12 +121,12 @@ string Tokenizer::getToken() const {
 }
 
 int Tokenizer::lineNumber() const {
-    return _stream.getLineNumber();
+    return _stream->getLineNumber();
 }
 
 int Tokenizer::linePosition() const {
 
-    return _stream.getLinePosition() - _token.length();
+    return _stream->getLinePosition() - _token.length();
 }
 
 Tokenizer &Tokenizer::addKeyword(const string keyword) {
@@ -148,24 +134,19 @@ Tokenizer &Tokenizer::addKeyword(const string keyword) {
     return *this;
 }
 
-Tokenizer &Tokenizer::setTokenMode(Tokenizer::ValueType type, bool enabled) {
-    _enabledTokens[type] = enabled;
-    return *this;
-}
-
 void Tokenizer::nextToken() {
     string token;
     while (true) {
-        int symbol = _stream.get();
+        int symbol = _stream->get();
         // operations, EOF, / -> // | /*
-        if (_stream.eof()) {
+        if (_stream->eof()) {
             token = "";
             _type = T_EOF;
         } else if (isspace(symbol)) {
-            while (isspace(symbol) && !_stream.eof()) {
-                symbol = _stream.get();
+            while (isspace(symbol) && !_stream->eof()) {
+                symbol = _stream->get();
             }
-            _stream.unget();
+            _stream->unget();
             continue;
         } else if (symbol == '+') {
             token = symbol;
@@ -202,40 +183,39 @@ void Tokenizer::nextToken() {
             _type = T_CLOSING_CBRACKET;
         } else if (symbol == '#') {
             // line comment
-            while ((symbol != '\n') && !_stream.eof()) {
-                symbol = _stream.get();
+            while ((symbol != '\n') && !_stream->eof()) {
+                symbol = _stream->get();
             }
-            _stream.unget();
+            _stream->unget();
             continue;
         } else if (symbol == '/') {
-            int next_symbol = _stream.get();
+            int next_symbol = _stream->get();
 
             if (next_symbol == '/') {
                 // line comment
-                while ((symbol != '\n') && !_stream.eof()) {
-                    symbol = _stream.get();
+                while ((symbol != '\n') && !_stream->eof()) {
+                    symbol = _stream->get();
                 }
-                _stream.unget();
+                _stream->unget();
                 continue;
             } else if (next_symbol == '*') {
-                symbol = _stream.get();
-                next_symbol = _stream.get();
-                while ((symbol != '*') || (next_symbol != '/') && !_stream.eof()) {
+                symbol = _stream->get();
+                next_symbol = _stream->get();
+                while ((symbol != '*') || (next_symbol != '/') && !_stream->eof()) {
                     symbol = next_symbol;
-                    next_symbol = _stream.get();
+                    next_symbol = _stream->get();
                 }
-
                 continue;
             } else {
-                _stream.unget();
+                _stream->unget();
                 token = symbol;
                 _type = T_DIV;
             }
         } else if (isdigit(symbol) || symbol == '.') {
             int penalty = (symbol == '.') ? 1 : 0;
             token += symbol;
-            symbol = _stream.get();
-            while ((isdigit(symbol) || symbol == '.') && !_stream.eof()) {
+            symbol = _stream->get();
+            while ((isdigit(symbol) || symbol == '.') && !_stream->eof()) {
                 token += symbol;
                 if (symbol == '.') {
                     penalty += 1;
@@ -243,12 +223,12 @@ void Tokenizer::nextToken() {
                         break;
                     }
                 }
-                symbol = _stream.get();
+                symbol = _stream->get();
             }
             // if things like 100abc are forbidden,
             // here should be some check that symbol is
             // a delimiter, an operation or a comment
-            _stream.unget();
+            _stream->unget();
             if (penalty == 0) {
                 _type = T_INTEGER;
             } else if (penalty == 1) {
@@ -258,12 +238,12 @@ void Tokenizer::nextToken() {
             }
         } else if (isalpha(symbol) || symbol == '_') {
             token += symbol;
-            symbol = _stream.get();
-            while ((isalnum(symbol) || symbol == '_') && !_stream.eof()) {
+            symbol = _stream->get();
+            while ((isalnum(symbol) || symbol == '_') && !_stream->eof()) {
                 token += symbol;
-                symbol = _stream.get();
+                symbol = _stream->get();
             }
-            _stream.unget();
+            _stream->unget();
 
             _type = T_WORD;
             for (vector<string>::iterator iter = _keywords.begin();

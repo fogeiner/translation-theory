@@ -20,24 +20,20 @@ public:
 
 class LocatableStream {
 private:
-    std::istream *_stream;
-    bool canUnget;
-    int lineNumber;
-    int linePosition;
-    int lastPosition;
-    int lastSymbol;
+    std::istream &_stream;
+    bool _canUnget;
+    int _lineNumber;
+    int _linePosition;
+    int _lastPosition;
+    int _lastSymbol;
 public:
 
-    LocatableStream(std::istream *stream);
+    LocatableStream(std::istream &stream);
 
     int get();
-
     void unget();
-
     bool eof() const ;
-
     int getLineNumber() const;
-
     int getLinePosition() const;
 };
 
@@ -68,17 +64,16 @@ public:
     static std::map<ValueType, std::string> _valueTypeTags;
 
 private:
-    LocatableStream _stream;
+    LocatableStream *_stream;
     std::map<ValueType, bool> _enabledTokens;
     Tokenizer::ValueType _type;
     std::vector<std::string> _keywords;
     std::string _token;
 public:
 
-    Tokenizer(std::istream *stream);
-
+    Tokenizer(std::istream &stream);
+    virtual ~Tokenizer();
     Tokenizer &addKeyword(const std::string keyword);
-    Tokenizer &setTokenMode(Tokenizer::ValueType type, bool enabled);
     void nextToken();
     Tokenizer::ValueType getTokenType();
     std::string getToken() const;
