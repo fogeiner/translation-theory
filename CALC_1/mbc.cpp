@@ -57,24 +57,23 @@ double parseFactor(Tokenizer &tokenizer) {
 int main(int argc, char** argv) {
     Logger::setLevel(Logger::DEBUG);
 
-    istream *input;
-
     if (argc <= 1) {
-        cout << "Usage: " << argv[0] << " [file|-]" << endl;
-        exit(1);
-    } else if (!strcmp(argv[1], "-")) {
-        input = &cin;
-    } else {
-        input = new ifstream(argv[1]);
-        if (!input->good()) {
-            CRITICAL(fmt("Failed to open input file: %s", strerror(errno)));
-        }
+        CRITICAL(fmt("Usage: %s [file|-]", argv[0]));
+    }
+
+    istream *input = !strcmp(argv[1], "-") ? &cin : new ifstream(argv[1]);
+
+    if (!input->good()) {
+        CRITICAL(fmt("Failed to open input: %s", strerror(errno)));
     }
 
     try {
         Tokenizer tokenizer(*input);
-
         tokenizer.addKeyword("print");
+
+        ArithmeticsParser parser(tokenizer);
+        double expressionValue = parser.parse();
+        cout << "Value is " << expressionValue << endl;
 
         /*
         for (tokenizer.nextToken();
@@ -86,11 +85,12 @@ int main(int argc, char** argv) {
                     << tokenizer.linePosition() << endl;
         }*/
 
-        ArithmeticsParser parser(tokenizer);
-        cout << "Value is " << parser.parse() << endl;
-        
-    } catch (exception ex) {
-        CRITICAL(ex.what());
+
+
+    } catch (ParseException &ex) {
+        ERROR(ex.what());
+    } catch (exception &ex) {
+        ERROR(ex.what());
     }
 
     if (input != &cin) {

@@ -54,11 +54,7 @@ private:
         ARITHMETICS_PARSER_DEBUG;
         double result;
         result = parseTerm1();
-        try {
-            parseT1(&result);
-        } catch (ParseException &ex) {
-
-        }
+        parseT1(&result);
         return result;
     }
 
@@ -77,10 +73,11 @@ private:
             } else {
                 *result -= term;
             }
-            
+
             try {
                 parseT1(result);
             } catch (ParseException &ex) {
+
             }
         }
 
@@ -89,7 +86,7 @@ private:
     void parseT2(double *result) {
         ARITHMETICS_PARSER_DEBUG;
         double term;
-        
+
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MULT
                 || type == Tokenizer::T_DIV) {
@@ -101,7 +98,7 @@ private:
             } else {
                 *result /= term;
             }
-            
+
             try {
                 parseT2(result);
             } catch (ParseException &ex) {
@@ -127,7 +124,12 @@ private:
             nextToken();
             result = parseExpr();
             if (_type != Tokenizer::T_CLOSING_RBRACKET) {
-                throw ParseException("__LINE__");
+                throw ParseException(
+                        LOG_MSG(
+                        fmt("Expected ')' but got '%s' on %d:%d",
+                        _token.c_str(), _tokenizer.lineNumber(),
+                        _tokenizer.linePosition()).c_str()
+                        ));
             }
             nextToken();
         } else {
@@ -146,9 +148,25 @@ private:
             result = atoi(_token.c_str());
             nextToken();
         } else {
-            throw ParseException("__LINE__");
+            throw ParseException(
+                    LOG_MSG(fmt("Expected number but got '%s' on %d:%d",
+                    _token.c_str(), _tokenizer.lineNumber(),
+                    _tokenizer.linePosition()).c_str()
+                    ));
         }
         return result;
+    }
+
+    double mod(double x, double y) {
+        if (y < 0) {
+            return -mod(-x, -y);
+        } else {
+            double result = x - int(x / y) * y;
+            if (result < 0) {
+                result += y;
+            }
+            return result;
+        }
     }
 
     void nextToken() {
