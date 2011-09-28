@@ -20,40 +20,6 @@ using std::istream;
 using std::string;
 using std::exception;
 
-/*
-double parseFactor(Tokenizer &tokenizer) {
-    DEBUG(fmt("%s %s %d:%d",
-            _token.c_str(),
-            _tokenizer.getTokenTag(_type).c_str(),
-            tokenizer.lineNumber(),
-            tokenizer.linePosition()
-            ));
-    Tokenizer::ValueType type = tokenizer.getTokenType();
-    double result;
-
-    if (type == Tokenizer::T_INTEGER) {
-        result = atol(tokenizer.getToken().c_str());
-    } else if (type == Tokenizer::T_REAL) {
-        result = atof(tokenizer.getToken().c_str());
-    } else if (type == Tokenizer::T_OPENING_RBRACKET) {
-        tokenizer.nextToken();
-        result = parseExpr(tokenizer);
-    } else {
-        throw ParseException(
-                LOG_MSG(fmt("Expected integer, real or ( but got %s (%s) on %d:%d",
-                tokenizer.getToken().c_str(),
-                tokenizer.getTokenTag(type).c_str(),
-                tokenizer.lineNumber(),
-                tokenizer.linePosition()).c_str()
-                ));
-    }
-
-    tokenizer.nextToken();
-
-    return result;
-}
- */
-
 int main(int argc, char** argv) {
     Logger::setLevel(Logger::DEBUG);
 
@@ -69,13 +35,13 @@ int main(int argc, char** argv) {
 
     try {
         Tokenizer tokenizer(*input);
-        tokenizer.addKeyword("print");
+        tokenizer
+                .addKeyword("print")
+                .addKeyword("return");
 
         ArithmeticsParser parser(tokenizer);
-        double expressionValue = parser.parse();
-        cout << "Value is " << expressionValue << endl;
 
-        /*
+#ifdef PRINT_TOKENS
         for (tokenizer.nextToken();
                 tokenizer.getTokenType() != Tokenizer::T_EOF;
                 tokenizer.nextToken()) {
@@ -83,9 +49,11 @@ int main(int argc, char** argv) {
                     << "\t" << tokenizer.getTokenTag(tokenizer.getTokenType()) << '\t'
                     << tokenizer.lineNumber() << '\t'
                     << tokenizer.linePosition() << endl;
-        }*/
-
-
+        }
+#else
+        double expressionValue = parser.parse();
+        cout << "Value is " << expressionValue << endl;
+#endif
 
     } catch (ParseException &ex) {
         ERROR(ex.what());
@@ -99,4 +67,3 @@ int main(int argc, char** argv) {
 
     return EXIT_SUCCESS;
 }
-
