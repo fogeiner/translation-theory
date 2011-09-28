@@ -57,6 +57,7 @@ private:
     double parseTerm1() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
+        
         result = parseTerm2();
         parseT1(&result);
         return result;
@@ -65,33 +66,39 @@ private:
     double parseTerm2() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
+        
         result = parseTerm3();
         try {
             parseT2(&result);
         } catch (ParseException &ex) {
         }
+        
         return result;
     }
 
     double parseTerm3() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
+        
         result = parseTerm4();
         try {
             parseT3(&result);
         } catch (ParseException &ex) {
         }
+        
         return result;
     }
 
     double parseTerm4() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
+        
         result = parseTermN();
         try {
             parseT4(&result);
         } catch (ParseException &ex) {
         }
+        
         return result;
     }
 
@@ -101,10 +108,9 @@ private:
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_PLUS
                 || type == Tokenizer::T_MINUS) {
-
             nextToken();
+            
             term = parseTerm2();
-
             if (type == Tokenizer::T_PLUS) {
                 *result += term;
             } else {
@@ -127,8 +133,8 @@ private:
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MULT
                 || type == Tokenizer::T_DIV) {
-
             nextToken();
+            
             term = parseTerm3();
             if (type == Tokenizer::T_MULT) {
                 *result *= term;
@@ -150,8 +156,10 @@ private:
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MOD) {
             nextToken();
+            
             term = parseTerm4();
             *result = mod(*result, term);
+            
             try {
                 parseT3(result);
             } catch (ParseException &ex) {
@@ -209,10 +217,8 @@ private:
         double result;
         if (_type == Tokenizer::T_REAL) {
             result = atof(_token.c_str());
-            nextToken();
         } else if (_type == Tokenizer::T_INTEGER) {
             result = atoi(_token.c_str());
-            nextToken();
         } else {
             throw ParseException(
                     LOG_MSG(fmt("Expected number but got '%s' on %d:%d",
@@ -220,6 +226,7 @@ private:
                     _tokenizer.linePosition()).c_str()
                     ));
         }
+        nextToken();
         return result;
     }
 
@@ -255,7 +262,7 @@ public:
         result = parseTerm1();
         if (_type != Tokenizer::T_EOF) {
             throw ParseException(
-                    LOG_MSG(fmt("Unparsed token '%s' on %d:%d",
+                    LOG_MSG(fmt("Unparsed token '%s' found on %d:%d",
                     _token.c_str(), _tokenizer.lineNumber(),
                     _tokenizer.linePosition()).c_str()
                     ));
