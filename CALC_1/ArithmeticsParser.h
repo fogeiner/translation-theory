@@ -37,14 +37,15 @@ public:
 };
 
 /**
- * term0 -> term1 T1 | term1
- * term1 -> term2 T2 | term2
- * term2 -> termN T3 | termN
+ * term1 -> term2 T1 | term2
+ * term2 -> term3 T2 | term3
+ * term3 -> term4 T3 | term4
+ * term4 -> termN T4 | termN
  * termN -> +termN | -termN | number | (expr)
- * T1 -> +- term1 T1 | +- term1 
- * T2 -> /* termN T2 | /* termN
- * T3 -> % termN T3 | % termN
- * 
+ * T1 -> +- term2 T1 | +- term2 
+ * T2 -> /* term3 T2 | /* term3
+ * T3 -> % term4 T3 | % term4
+ * T4 -> ^ T4 termN | ^ termN
  * number → real | integer 
  */
 class ArithmeticsParser {
@@ -53,11 +54,44 @@ private:
     Tokenizer::ValueType _type;
     string _token;
 
-    double parseTerm0() {
+    double parseTerm1() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        result = parseTerm1();
+        result = parseTerm2();
         parseT1(&result);
+        return result;
+    }
+
+    double parseTerm2() {
+        ARITHMETICS_PARSER_DEBUG;
+        double result;
+        result = parseTerm3();
+        try {
+            parseT2(&result);
+        } catch (ParseException &ex) {
+        }
+        return result;
+    }
+
+    double parseTerm3() {
+        ARITHMETICS_PARSER_DEBUG;
+        double result;
+        result = parseTerm4();
+        try {
+            parseT3(&result);
+        } catch (ParseException &ex) {
+        }
+        return result;
+    }
+
+    double parseTerm4() {
+        ARITHMETICS_PARSER_DEBUG;
+        double result;
+        result = parseTermN();
+        try {
+            parseT4(&result);
+        } catch (ParseException &ex) {
+        }
         return result;
     }
 
@@ -69,7 +103,7 @@ private:
                 || type == Tokenizer::T_MINUS) {
 
             nextToken();
-            term = parseTerm1();
+            term = parseTerm2();
 
             if (type == Tokenizer::T_PLUS) {
                 *result += term;
@@ -125,26 +159,22 @@ private:
         }
     }
 
-    double parseTerm1() {
+    void parseT4(double *result) {
         ARITHMETICS_PARSER_DEBUG;
-        double result;
-        result = parseTerm2();
-        try {
-            parseT2(&result);
-        } catch (ParseException &ex) {
-        }
-        return result;
-    }
+        double term;
 
-    double parseTerm2() {
-        ARITHMETICS_PARSER_DEBUG;
-        double result;
-        result = parseTermN();
-        try {
-            parseT3(&result);
-        } catch (ParseException &ex) {
+        Tokenizer::ValueType type = _type;
+        if (type == Tokenizer::T_POWER) {
+            nextToken();
+            term = parseTermN();
+
+            try {
+                parseT4(result);
+            } catch (ParseException &ex) {
+            }
+
+            *result = pow(*result, term);
         }
-        return result;
     }
 
     double parseTermN() {
@@ -152,7 +182,7 @@ private:
         double result;
         if (_type == Tokenizer::T_OPENING_RBRACKET) {
             nextToken();
-            result = parseTerm0();
+            result = parseTerm1();
             if (_type != Tokenizer::T_CLOSING_RBRACKET) {
                 throw ParseException(
                         LOG_MSG(
@@ -222,7 +252,7 @@ public:
         ARITHMETICS_PARSER_DEBUG;
         double result;
         nextToken();
-        result = parseTerm0();
+        result = parseTerm1();
         if (_type != Tokenizer::T_EOF) {
             throw ParseException(
                     LOG_MSG(fmt("Unparsed token '%s' on %d:%d",
