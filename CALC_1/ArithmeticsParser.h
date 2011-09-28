@@ -129,7 +129,7 @@ private:
                 || type == Tokenizer::T_DIV) {
 
             nextToken();
-            term = parseTermN();
+            term = parseTerm3();
             if (type == Tokenizer::T_MULT) {
                 *result *= term;
             } else {
@@ -150,7 +150,7 @@ private:
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MOD) {
             nextToken();
-            term = parseTermN();
+            term = parseTerm4();
             *result = mod(*result, term);
             try {
                 parseT3(result);
