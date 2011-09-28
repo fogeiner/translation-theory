@@ -37,11 +37,11 @@ public:
 };
 
 /**
- * expr -> term1 T1 | term1
+ * term0 -> term1 T1 | term1
  * term1 -> atom T2 | atom
- * atom -> var | number | (expr)
+ * termN -> +termN | -termN | number | (expr)
  * T1 -> +- term1 T1 | +- term1 
- * T2 -> /* atom T2 | /* atom 
+ * T2 -> /* termn T2 | /* termn 
  * number → real | integer 
  */
 class ArithmeticsParser {
@@ -50,7 +50,7 @@ private:
     Tokenizer::ValueType _type;
     string _token;
 
-    double parseExpr() {
+    double parseTerm0() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
         result = parseTerm1();
@@ -92,7 +92,7 @@ private:
                 || type == Tokenizer::T_DIV) {
 
             nextToken();
-            term = parseAtom();
+            term = parseTermN();
             if (type == Tokenizer::T_MULT) {
                 *result *= term;
             } else {
@@ -109,7 +109,7 @@ private:
     double parseTerm1() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        result = parseAtom();
+        result = parseTermN();
         try {
             parseT2(&result);
         } catch (ParseException &ex) {
@@ -117,12 +117,12 @@ private:
         return result;
     }
 
-    double parseAtom() {
+    double parseTermN() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
         if (_type == Tokenizer::T_OPENING_RBRACKET) {
             nextToken();
-            result = parseExpr();
+            result = parseTerm0();
             if (_type != Tokenizer::T_CLOSING_RBRACKET) {
                 throw ParseException(
                         LOG_MSG(
@@ -132,6 +132,12 @@ private:
                         ));
             }
             nextToken();
+        } else if (_type == Tokenizer::T_PLUS) {
+            nextToken();
+            result = parseTermN();
+        } else if (_type == Tokenizer::T_MINUS) {
+            nextToken();
+            result = -parseTermN();
         } else {
             result = parseNumber();
         }
@@ -186,7 +192,7 @@ public:
         ARITHMETICS_PARSER_DEBUG;
         double result;
         nextToken();
-        result = parseExpr();
+        result = parseTerm0();
         return result;
     }
 
