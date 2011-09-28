@@ -38,10 +38,13 @@ public:
 
 /**
  * term0 -> term1 T1 | term1
- * term1 -> atom T2 | atom
+ * term1 -> term2 T2 | term2
+ * term2 -> termN T3 | termN
  * termN -> +termN | -termN | number | (expr)
  * T1 -> +- term1 T1 | +- term1 
- * T2 -> /* termn T2 | /* termn 
+ * T2 -> /* termN T2 | /* termN
+ * T3 -> % termN T3 | % termN
+ * 
  * number → real | integer 
  */
 class ArithmeticsParser {
@@ -106,12 +109,39 @@ private:
         }
     }
 
+    void parseT3(double *result) {
+        ARITHMETICS_PARSER_DEBUG;
+        double term;
+
+        Tokenizer::ValueType type = _type;
+        if (type == Tokenizer::T_MOD) {
+            nextToken();
+            term = parseTermN();
+            *result = mod(*result, term);
+            try {
+                parseT3(result);
+            } catch (ParseException &ex) {
+            }
+        }
+    }
+
     double parseTerm1() {
+        ARITHMETICS_PARSER_DEBUG;
+        double result;
+        result = parseTerm2();
+        try {
+            parseT2(&result);
+        } catch (ParseException &ex) {
+        }
+        return result;
+    }
+
+    double parseTerm2() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
         result = parseTermN();
         try {
-            parseT2(&result);
+            parseT3(&result);
         } catch (ParseException &ex) {
         }
         return result;
@@ -165,7 +195,7 @@ private:
 
     double mod(double x, double y) {
         if (y < 0) {
-            return -mod(-x, -y);
+            return mod(-x, -y);
         } else {
             double result = x - int(x / y) * y;
             if (result < 0) {
@@ -193,6 +223,13 @@ public:
         double result;
         nextToken();
         result = parseTerm0();
+        if (_type != Tokenizer::T_EOF) {
+            throw ParseException(
+                    LOG_MSG(fmt("Unparsed token '%s' on %d:%d",
+                    _token.c_str(), _tokenizer.lineNumber(),
+                    _tokenizer.linePosition()).c_str()
+                    ));
+        }
         return result;
     }
 
