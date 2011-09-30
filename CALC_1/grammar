@@ -1,0 +1,12 @@
+term1 -> term2 T1 | term2
+term2 -> term3 T2 | term3
+term3 -> term4 T3 | term4
+term4 -> termN T4 | termN
+termN -> +termN | -termN | number | (term1)
+
+T1	  → ± term2 T1 | ± term2 
+T2	  → /* term3 T2 | /* term3
+T3	  → % term4 T3 | % term4
+T4	  → ^ T4 termN | ^ termN
+
+number → real | integer 

@@ -21,7 +21,7 @@ using std::string;
 using std::exception;
 
 int main(int argc, char** argv) {
-    Logger::setLevel(Logger::DEBUG);
+    Logger::setLevel(Logger::ERROR);
 
     if (argc <= 1) {
         CRITICAL(fmt("Usage: %s [file|-]", argv[0]));
