@@ -64,7 +64,7 @@ public:
     static std::map<ValueType, std::string> _valueTypeTags;
 
 private:
-    LocatableStream *_stream;
+    LocatableStream _stream;
     std::map<ValueType, bool> _enabledTokens;
     Tokenizer::ValueType _type;
     std::vector<std::string> _keywords;

@@ -15,7 +15,6 @@
             _tokenizer.linePosition()\
             ))
 
-
 using std::string;
 using std::exception;
 
@@ -36,12 +35,12 @@ public:
     }
 };
 
-/**
+/** 
  * term1 -> term2 T1 | term2
  * term2 -> term3 T2 | term3
  * term3 -> term4 T3 | term4
  * term4 -> termN T4 | termN
- * termN -> +termN | -termN | number | (expr)
+ * termN -> +termN | -termN | number | (term1)
  * T1 -> +- term2 T1 | +- term2 
  * T2 -> /* term3 T2 | /* term3
  * T3 -> % term4 T3 | % term4
@@ -53,11 +52,13 @@ private:
     Tokenizer &_tokenizer;
     Tokenizer::ValueType _type;
     string _token;
+    int _lineNumber;
+    int _linePosition;
 
     double parseTerm1() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        
+
         result = parseTerm2();
         parseT1(&result);
         return result;
@@ -66,39 +67,39 @@ private:
     double parseTerm2() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        
+
         result = parseTerm3();
         try {
             parseT2(&result);
         } catch (ParseException &ex) {
         }
-        
+
         return result;
     }
 
     double parseTerm3() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        
+
         result = parseTerm4();
         try {
             parseT3(&result);
         } catch (ParseException &ex) {
         }
-        
+
         return result;
     }
 
     double parseTerm4() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-        
+
         result = parseTermN();
         try {
             parseT4(&result);
         } catch (ParseException &ex) {
         }
-        
+
         return result;
     }
 
@@ -109,7 +110,7 @@ private:
         if (type == Tokenizer::T_PLUS
                 || type == Tokenizer::T_MINUS) {
             nextToken();
-            
+
             term = parseTerm2();
             if (type == Tokenizer::T_PLUS) {
                 *result += term;
@@ -134,7 +135,7 @@ private:
         if (type == Tokenizer::T_MULT
                 || type == Tokenizer::T_DIV) {
             nextToken();
-            
+
             term = parseTerm3();
             if (type == Tokenizer::T_MULT) {
                 *result *= term;
@@ -156,10 +157,10 @@ private:
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MOD) {
             nextToken();
-            
+
             term = parseTerm4();
             *result = mod(*result, term);
-            
+
             try {
                 parseT3(result);
             } catch (ParseException &ex) {
@@ -195,8 +196,7 @@ private:
                 throw ParseException(
                         LOG_MSG(
                         fmt("Expected ')' but got '%s' on %d:%d",
-                        _token.c_str(), _tokenizer.lineNumber(),
-                        _tokenizer.linePosition()).c_str()
+                        _token.c_str(), _lineNumber, _linePosition).c_str()
                         ));
             }
             nextToken();
@@ -222,8 +222,7 @@ private:
         } else {
             throw ParseException(
                     LOG_MSG(fmt("Expected number but got '%s' on %d:%d",
-                    _token.c_str(), _tokenizer.lineNumber(),
-                    _tokenizer.linePosition()).c_str()
+                    _token.c_str(), _lineNumber, _linePosition).c_str()
                     ));
         }
         nextToken();
@@ -247,6 +246,8 @@ private:
         _tokenizer.nextToken();
         _type = _tokenizer.getTokenType();
         _token = _tokenizer.getToken();
+        _lineNumber = _tokenizer.lineNumber();
+        _linePosition = _tokenizer.linePosition();
     }
 public:
 
