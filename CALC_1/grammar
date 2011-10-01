@@ -10,3 +10,90 @@ T3	  → % term4 T3 | % term4
 T4	  → ^ T4 termN | ^ termN
 
 number → real | integer 
+
+====
+At first simple grammar
+
+expr -> term T | term
+term -> factor F | factor
+factor -> number | (expr)
+T -> ± term T | ± term
+F -> */ factor F | factor
+
+Syntax Tree XML representation
+Binary tree? But T and F require three children!
+
+
+1
+<expr>
+	<term>
+		<factor>
+			<number>1</number>
+		</factor>
+	</term>
+</expr>
+
+1+2 = term T = term + term
+<expr>
+	<term>
+		<factor>
+		</factor>
+	</term>
+</expr>
+
+1+2 ->
+inner nodes == nonterminals
+leaves == terminals
+every node knows its type
+i.e.
+
+1 + 2
+<expr>
+	<term>
+		<factor>
+			<number>1</number>
+		</factor>
+	</term>
+	<T>
+		<operation>+</operation>
+		<term>
+			<factor>
+				<number>2</number>
+			</factor>
+		</term>
+	</T>
+</expr>
+
+(1+2)*3
+<expr>
+	<term>
+		<factor>
+			<sign>(</sign>
+				<expr>
+					<term>
+						<factor>
+							<number>1</number>
+						</factor>
+					</term>
+					<T>
+						<operation>+</operation>
+						<term>
+							<factor>
+								<number>2</number>
+							</factor>
+						</term>
+					</T>
+				</expr>
+			<sign>)</sign>
+			<F>
+				<factor>
+					<number>3</number>
+				</factor>
+			</F>
+		</factor>
+	</term>
+</expr>
+
+Question is what are the types of nodes required?
+Answer is
+every non-terminal and every terminal requires separate node type
