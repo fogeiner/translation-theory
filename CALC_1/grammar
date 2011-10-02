@@ -11,6 +11,18 @@ T4	  → ^ T4 termN | ^ termN
 
 number → real | integer 
 
+teminals: real, integer, ^, %, /, *, -, +, (, )
+non-terminals: term#, T#, number
+
+class Node
++ string XMLStart
++ string XMLEnd
+class NodeCreator
++ Node *create(string token)
+class NodeFactory
++ register(ValueType type, NodeCreator *)
++ create(ValueType, string token)
+
 ====
 At first simple grammar
 

@@ -65,7 +65,6 @@ public:
 
 private:
     LocatableStream _stream;
-    std::map<ValueType, bool> _enabledTokens;
     Tokenizer::ValueType _type;
     std::vector<std::string> _keywords;
     std::string _token;
@@ -81,7 +80,7 @@ public:
     int lineNumber() const;
     int linePosition() const;
 
-    const std::string getTokenTag(ValueType valueTy) const;
+    const std::string getTokenTag(ValueType valueType) const;
 };
 
 
