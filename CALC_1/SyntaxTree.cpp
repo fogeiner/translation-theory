@@ -24,7 +24,8 @@ enum NodeType {
 	N_PLUS, N_OPENING_RBRACKET, N_CLOSING_RBRACKET,
 	
 	N_TERM1, N_TERM2, N_TERM3, N_TERM4, N_TERMN,
-	N_T1, N_T2, N_T3, N_T4, N_NUMBER};
+	N_T1, N_T2, N_T3, N_T4, N_NUMBER
+};
 
 
 class Node {

@@ -46,11 +46,6 @@ public:
  * T3 -> % term4 T3 | % term4
  * T4 -> ^ T4 termN | ^ termN
  * number → real | integer 
- *
- * T1	  → ± term2 T1 | ± term2 
- * T2	  → /* term3 T2 | /* term3
- * T3	  → % term4 T3 | % term4
- * T4	  → ^ T4 termN | ^ termN
  */
 class ArithmeticsParser {
 private:
