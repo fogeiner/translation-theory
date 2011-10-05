@@ -31,9 +31,11 @@ string XMLTree(Node *node, int level) {
 	
 	return xml;
 }
+bool NodeFactory::_inited = false;
 
-
-int main2(int argc, char *argv[]) {
+void NodeFactory::defaultInit() {
+	if (NodeFactory::_inited) 
+		return;
 	NodeFactory::registerCreator(N_REAL, new NodeCreator<RealNode>());
 	NodeFactory::registerCreator(N_INTEGER, new NodeCreator<IntegerNode>());
 	NodeFactory::registerCreator(N_POWER, new NodeCreator<PowerNode>());
@@ -54,6 +56,10 @@ int main2(int argc, char *argv[]) {
 	NodeFactory::registerCreator(N_T3, new NodeCreator<T3Node>());
 	NodeFactory::registerCreator(N_T4, new NodeCreator<T4Node>());
 	NodeFactory::registerCreator(N_NUMBER, new NodeCreator<NumberNode>());
+}
+
+int main2(int argc, char *argv[]) {
+
 
 	Node *node = NodeFactory::create(N_TERM1);
 	node->addChild(NodeFactory::create(N_TERM2));

@@ -53,9 +53,10 @@ int main(int argc, char** argv) {
         }
 #else
         double expressionValue = parser.value();
-//Node *root = parser.syntaxTree();
-//cout << XMLTree(root) << endl;
         cout << "Value is " << expressionValue << endl;
+		Node *root = parser.syntaxTree();
+		cout << XMLTree(root) << endl;
+        
 #endif
 
     } catch (ParseException &ex) {

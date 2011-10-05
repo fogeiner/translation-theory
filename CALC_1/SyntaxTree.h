@@ -65,7 +65,14 @@ public:
 		return _children[index];
 	}
 	
-	virtual ~Node(){};
+	virtual ~Node() {
+		for(Node::node_iterator it = this->begin();
+			it != this->end(); ++it) {
+				Node *node = *it;
+				delete node;
+		}
+	}
+	
 	virtual string XMLStart() const = 0;
 	virtual string XMLEnd() const = 0;
 };
@@ -105,13 +112,11 @@ class NodeFactoryException: exception {
 class NodeFactory {
 	private:
 	static map<NodeType, INodeCreator*> _creators;
+	static bool _inited;
 public:
+	static void defaultInit();
 	
-	static Node *create(NodeType type) {
-		return NodeFactory::create(type, "");
-	}
-
-	static Node *create(NodeType type, string token) {
+	static Node *create(NodeType type, string token = "") {
 		map<NodeType, INodeCreator*>::iterator it = _creators.find(type);
 		if (it == _creators.end()) {
 			throw NodeFactoryException(LOG_MSG("Requested NodeCreator not found"));
