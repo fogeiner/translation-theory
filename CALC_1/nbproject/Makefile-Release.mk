@@ -36,7 +36,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/ArithmeticsParser.o \
 	${OBJECTDIR}/mbc.o \
+	${OBJECTDIR}/SyntaxTree.o \
 	${OBJECTDIR}/Tokenizer.o \
+	${OBJECTDIR}/ArithmeticsTree.o \
 	${OBJECTDIR}/utils.o \
 	${OBJECTDIR}/Logger.o
 
@@ -75,10 +77,20 @@ ${OBJECTDIR}/mbc.o: mbc.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/mbc.o mbc.cpp
 
+${OBJECTDIR}/SyntaxTree.o: SyntaxTree.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/SyntaxTree.o SyntaxTree.cpp
+
 ${OBJECTDIR}/Tokenizer.o: Tokenizer.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Tokenizer.o Tokenizer.cpp
+
+${OBJECTDIR}/ArithmeticsTree.o: ArithmeticsTree.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ArithmeticsTree.o ArithmeticsTree.cpp
 
 ${OBJECTDIR}/utils.o: utils.cpp 
 	${MKDIR} -p ${OBJECTDIR}

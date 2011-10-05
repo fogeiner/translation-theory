@@ -299,7 +299,7 @@ public:
     _value(0.0),
     _root(NULL) {
         ARITHMETICS_PARSER_DEBUG;
-		
+        
 		NodeFactory::defaultInit();
 		
 		nextToken();
@@ -315,6 +315,10 @@ public:
 					));
         }
     
+    }
+    
+    ~ArithmeticsParser() {
+        delete _root;
     }
 
     double value() const {

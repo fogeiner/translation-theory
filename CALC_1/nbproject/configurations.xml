@@ -6,8 +6,15 @@
                    projectFiles="true">
       <itemPath>ArithmeticsParser.cpp</itemPath>
       <itemPath>ArithmeticsParser.h</itemPath>
+      <itemPath>ArithmeticsTree.cpp</itemPath>
       <itemPath>Logger.cpp</itemPath>
+      <itemPath>SyntaxTree.cpp</itemPath>
+      <itemPath>SyntaxTree.h</itemPath>
       <itemPath>Tokenizer.cpp</itemPath>
+      <itemPath>_Node.h</itemPath>
+      <itemPath>_Nodes.h</itemPath>
+      <itemPath>genNodes.py</itemPath>
+      <itemPath>grammar</itemPath>
       <itemPath>mbc.cpp</itemPath>
       <itemPath>utils.cpp</itemPath>
     </logicalFolder>
