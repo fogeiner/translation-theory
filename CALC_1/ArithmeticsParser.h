@@ -90,7 +90,6 @@ private:
         return result;
     }
 
-
     void parseT1(double *result) {
         ARITHMETICS_PARSER_DEBUG;
         double term;
@@ -121,15 +120,18 @@ private:
 
         Tokenizer::ValueType type = _type;
         if (type == Tokenizer::T_MULT
-                || type == Tokenizer::T_DIV) {
+                || type == Tokenizer::T_DIV
+                || type == Tokenizer::T_MOD) {
             nextToken();
 
             term = parseTerm3();
             if (type == Tokenizer::T_MULT) {
                 *result *= term;
-            } else {
+            } else if (type == Tokenizer::T_DIV) {
                 *result /= term;
-            }
+            } else {
+				*result = mod(*result, term);
+			}
 
             try {
                 parseT2(result);
@@ -137,30 +139,22 @@ private:
             }
         }
     }
-
+    
     void parseT3(double *result) {
         ARITHMETICS_PARSER_DEBUG;
         double term;
 
         Tokenizer::ValueType type = _type;
-        if (type == Tokenizer::T_MULT
-			|| type == Tokenizer::T_DIV
-			|| type == Tokenizer::T_MOD) {
+        if (type == Tokenizer::T_POWER) {
             nextToken();
-
             term = parseTermN();
-            if (type == Tokenizer::T_MULT) {
-				*result = *result*term;
-			} else if (type == Tokenizer::T_DIV) {
-				*result = *result/term;
-			} else {
-				*result = mod(*result, term);
-			}
 
             try {
                 parseT3(result);
             } catch (ParseException &ex) {
             }
+
+            *result = pow(*result, term);
         }
     }
 
@@ -247,7 +241,7 @@ public:
     
     }
 
-    double parse() const {
+    double value() const {
         return _result;
     }
     

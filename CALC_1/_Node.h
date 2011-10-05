@@ -12,9 +12,10 @@
 class NODE_NAME: public Node {
 	private:
 	public:
-		NODE_NAME(string token):
+		NODE_NAME(string token = ""):
 		Node(token)
 		{}
+		
 		
 		string XMLStart() const {
 			string xml = NODE_XML_START;

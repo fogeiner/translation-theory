@@ -27,16 +27,13 @@ string XMLTree(Node *node, int level) {
 	}
 	
 	xml += end;
+	xml += '\n';
 	
-	if (end.length() != 0) {
-		xml += '\n';
-	}
-
 	return xml;
 }
 
 
-int main(int argc, char *argv[]) {
+int main2(int argc, char *argv[]) {
 	NodeFactory::registerCreator(N_REAL, new NodeCreator<RealNode>());
 	NodeFactory::registerCreator(N_INTEGER, new NodeCreator<IntegerNode>());
 	NodeFactory::registerCreator(N_POWER, new NodeCreator<PowerNode>());

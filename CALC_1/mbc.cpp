@@ -11,6 +11,7 @@
 #include "Tokenizer.h"
 
 #include "ArithmeticsParser.h"
+#include "SyntaxTree.h"
 
 using std::cin;
 using std::cout;
@@ -51,7 +52,9 @@ int main(int argc, char** argv) {
                     << tokenizer.linePosition() << endl;
         }
 #else
-        double expressionValue = parser.parse();
+        double expressionValue = parser.value();
+//Node *root = parser.syntaxTree();
+//cout << XMLTree(root) << endl;
         cout << "Value is " << expressionValue << endl;
 #endif
 

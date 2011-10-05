@@ -5,7 +5,7 @@
 #include <cstdlib>
 
 using namespace std;
-
+/*
 class Node {
 private:
 	string _token;
@@ -87,3 +87,4 @@ int main(int argc, char *argv[]) {
 	cout << n->compute() << endl;
 	return 0;
 }
+* */
