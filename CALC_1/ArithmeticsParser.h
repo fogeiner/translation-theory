@@ -150,7 +150,7 @@ private:
             term = parseTermN();
 
             try {
-                parseT3(result);
+                parseT3(&term);
             } catch (ParseException &ex) {
             }
 
