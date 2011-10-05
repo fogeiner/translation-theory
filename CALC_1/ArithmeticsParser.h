@@ -39,13 +39,11 @@ public:
 /** 
  * term1 -> term2 T1 | term2
  * term2 -> term3 T2 | term3
- * term3 -> term4 T3 | term4
- * term4 -> termN T4 | termN
+ * term3 -> termN T3 | termN
  * termN -> +termN | -termN | number | (term1)
  * T1 -> +- term2 T1 | +- term2 
- * T2 -> /* term3 T2 | /* term3
- * T3 -> % term4 T3 | % term4
- * T4 -> ^ T4 termN | ^ termN
+ * T2 -> /*% term3 T2 | /*% term3
+ * T3 -> ^ T3 termN | ^ termN
  * number → real | integer 
  */
 class ArithmeticsParser {
@@ -83,7 +81,7 @@ private:
         ARITHMETICS_PARSER_DEBUG;
         double result;
 
-        result = parseTerm4();
+        result = parseTermN();
         try {
             parseT3(&result);
         } catch (ParseException &ex) {
@@ -92,18 +90,6 @@ private:
         return result;
     }
 
-    double parseTerm4() {
-        ARITHMETICS_PARSER_DEBUG;
-        double result;
-
-        result = parseTermN();
-        try {
-            parseT4(&result);
-        } catch (ParseException &ex) {
-        }
-
-        return result;
-    }
 
     void parseT1(double *result) {
         ARITHMETICS_PARSER_DEBUG;
@@ -157,34 +143,24 @@ private:
         double term;
 
         Tokenizer::ValueType type = _type;
-        if (type == Tokenizer::T_MOD) {
+        if (type == Tokenizer::T_MULT
+			|| type == Tokenizer::T_DIV
+			|| type == Tokenizer::T_MOD) {
             nextToken();
 
-            term = parseTerm4();
-            *result = mod(*result, term);
+            term = parseTermN();
+            if (type == Tokenizer::T_MULT) {
+				*result = *result*term;
+			} else if (type == Tokenizer::T_DIV) {
+				*result = *result/term;
+			} else {
+				*result = mod(*result, term);
+			}
 
             try {
                 parseT3(result);
             } catch (ParseException &ex) {
             }
-        }
-    }
-
-    void parseT4(double *result) {
-        ARITHMETICS_PARSER_DEBUG;
-        double term;
-
-        Tokenizer::ValueType type = _type;
-        if (type == Tokenizer::T_POWER) {
-            nextToken();
-            term = parseTermN();
-
-            try {
-                parseT4(result);
-            } catch (ParseException &ex) {
-            }
-
-            *result = pow(*result, term);
         }
     }
 

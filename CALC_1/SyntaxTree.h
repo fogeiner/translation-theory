@@ -68,7 +68,6 @@ public:
 	virtual ~Node(){};
 	virtual string XMLStart() const = 0;
 	virtual string XMLEnd() const = 0;
-	virtual double compute() const = 0;
 };
 
 // file is generated with genNodes script
