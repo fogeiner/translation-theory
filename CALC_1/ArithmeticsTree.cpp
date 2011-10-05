@@ -5,7 +5,6 @@
 
 using namespace std;
 
-
 class Node {
 private:
 	string _token;
@@ -36,8 +35,6 @@ public:
 		return _children[index];
 	}
 	
-	virtual double compute() const = 0; 
-	
 	virtual ~Node(){};
 	virtual string XMLStart() const = 0;
 	virtual string XMLEnd() const = 0;
@@ -52,9 +49,11 @@ PlusNode()
 	string XMLStart() const {
 		return "<plus />";
 	}
+
 	string XMLEnd() const {
 		return "";
 	}
+
 	double compute() const {
 		Node *n1 = (*this)[0];
 		Node *n2 = (*this)[1];

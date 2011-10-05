@@ -3,6 +3,7 @@
 
 #include "Tokenizer.h"
 #include "Logger.h"
+#include "SyntaxTree.h"
 
 #include <exception>
 #include <string>
@@ -54,11 +55,12 @@ private:
     string _token;
     int _lineNumber;
     int _linePosition;
-
+	double _result;
+	Node *_root;
+	
     double parseTerm1() {
         ARITHMETICS_PARSER_DEBUG;
         double result;
-
         result = parseTerm2();
         parseT1(&result);
         return result;
@@ -107,6 +109,7 @@ private:
         ARITHMETICS_PARSER_DEBUG;
         double term;
         Tokenizer::ValueType type = _type;
+
         if (type == Tokenizer::T_PLUS
                 || type == Tokenizer::T_MINUS) {
             nextToken();
@@ -121,7 +124,6 @@ private:
             try {
                 parseT1(result);
             } catch (ParseException &ex) {
-
             }
         }
 
@@ -252,26 +254,34 @@ private:
 public:
 
     ArithmeticsParser(Tokenizer &tokenizer) :
-    _tokenizer(tokenizer) {
+    _tokenizer(tokenizer),
+    _result(0.0),
+    _root(NULL) {
         ARITHMETICS_PARSER_DEBUG;
-    }
-
-    double parse() {
-        ARITHMETICS_PARSER_DEBUG;
-        double result;
-        nextToken();
-        result = parseTerm1();
+		
+		nextToken();
+        _result = parseTerm1();
         if (_type != Tokenizer::T_EOF) {
             throw ParseException(
                     LOG_MSG(fmt("Unparsed token '%s' found on %d:%d",
                     _token.c_str(), _tokenizer.lineNumber(),
                     _tokenizer.linePosition()).c_str()
-                    ));
+					));
         }
-        return result;
+    
     }
+
+    double parse() const {
+        return _result;
+    }
+    
+    Node *syntaxTree() const {
+		return _root;
+	}
 
 };
 
+// abstraction is parsing the expression; rules are all 
+// the same but the operations are different
 #endif	/* ARITHMETICSPARSER_H */
 

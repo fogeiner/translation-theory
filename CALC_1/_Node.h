@@ -1,5 +1,13 @@
 // Nodes generator
-// define NODE_NAME, NODE_XML_START and NODE_XML_END and include this file
+// Define these and include
+// avaliable function to use:
+// std::string getToken() const
+// int childrenCount() const
+//
+// NODE_NAME -- class name ~PlusNode
+// NODE_XML_START -- xml representing the start of the node ~ "<plus />"
+// NODE_XML_END -- xml representing the end of the node ""
+//
 
 class NODE_NAME: public Node {
 	private:
@@ -18,4 +26,3 @@ class NODE_NAME: public Node {
 			return xml;
 		}
 };
-
