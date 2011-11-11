@@ -10,7 +10,7 @@ string XMLTree(Node *node, int level) {
 	end = node->XMLEnd();
 	
 	for (int i = 0; i < level; ++i) {
-		xml += '\t';
+		xml += ' ';
 	}
 
 	xml += start;
@@ -23,7 +23,7 @@ string XMLTree(Node *node, int level) {
 	}
 
 	for (int i = 0; i < level; ++i) {
-		xml += '\t';
+		xml += ' ';
 	}
 	
 	xml += end;
