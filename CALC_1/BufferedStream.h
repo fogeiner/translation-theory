@@ -123,7 +123,7 @@ public:
     }
 };
 
-int main(int argc, char *argv[]) {
+int main3(int argc, char *argv[]) {
     BufferedStream *bs = NULL;
     try {
 
