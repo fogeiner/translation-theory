@@ -40,7 +40,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/Tokenizer.o \
 	${OBJECTDIR}/ArithmeticsTree.o \
 	${OBJECTDIR}/utils.o \
-	${OBJECTDIR}/Logger.o
+	${OBJECTDIR}/Logger.o \
+	${OBJECTDIR}/BufferedStream.o
 
 
 # C Compiler Flags
@@ -101,6 +102,11 @@ ${OBJECTDIR}/Logger.o: Logger.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Logger.o Logger.cpp
+
+${OBJECTDIR}/BufferedStream.o: BufferedStream.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/BufferedStream.o BufferedStream.cpp
 
 # Subprojects
 .build-subprojects:

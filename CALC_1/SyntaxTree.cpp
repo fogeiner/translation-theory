@@ -56,6 +56,8 @@ void NodeFactory::defaultInit() {
 	NodeFactory::registerCreator(N_T3, new NodeCreator<T3Node>());
 	NodeFactory::registerCreator(N_T4, new NodeCreator<T4Node>());
 	NodeFactory::registerCreator(N_NUMBER, new NodeCreator<NumberNode>());
+	
+	NodeFactory::_inited = true;
 }
 
 int main2(int argc, char *argv[]) {

@@ -227,6 +227,7 @@ private:
                         _token.c_str(), _lineNumber, _linePosition).c_str()
                         ));
             }
+            node->addChild(NodeFactory::create(N_CLOSING_RBRACKET));
             nextToken();
         } else if (_type == Tokenizer::T_PLUS) {
 			node->addChild(NodeFactory::create(N_PLUS));
