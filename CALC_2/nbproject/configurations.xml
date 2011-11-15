@@ -5,7 +5,6 @@
                    displayName="Исходные файлы "
                    projectFiles="true">
       <itemPath>ArithmeticsParser.cpp</itemPath>
-      <itemPath>ArithmeticsTree.cpp</itemPath>
       <itemPath>BufferedStream.cpp</itemPath>
       <itemPath>LocatableStream.cpp</itemPath>
       <itemPath>Logger.cpp</itemPath>

@@ -39,7 +39,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/SyntaxTree.o \
 	${OBJECTDIR}/LocatableStream.o \
 	${OBJECTDIR}/Tokenizer.o \
-	${OBJECTDIR}/ArithmeticsTree.o \
 	${OBJECTDIR}/Logger.o \
 	${OBJECTDIR}/BufferedStream.o
 
@@ -92,11 +91,6 @@ ${OBJECTDIR}/Tokenizer.o: Tokenizer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/Tokenizer.o Tokenizer.cpp
-
-${OBJECTDIR}/ArithmeticsTree.o: ArithmeticsTree.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -MMD -MP -MF $@.d -o ${OBJECTDIR}/ArithmeticsTree.o ArithmeticsTree.cpp
 
 ${OBJECTDIR}/Logger.o: Logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}

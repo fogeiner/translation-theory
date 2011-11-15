@@ -37,11 +37,9 @@ int main(int argc, char** argv) {
         }
         
         Tokenizer tokenizer(*ls);
-        tokenizer
-                .addKeyword("print")
-                .addKeyword("return");
 
-        ArithmeticsParser parser(tokenizer);
+        
+#define PRINT_TOKENS
 #ifdef  PRINT_TOKENS
         for (tokenizer.nextToken();
                 tokenizer.getTokenType() != Tokenizer::T_EOF;
@@ -52,10 +50,11 @@ int main(int argc, char** argv) {
                     << tokenizer.linePosition() << endl;
         }
 #else
-        double expressionValue = parser.value();
-        cout << "Value is " << expressionValue << endl;
-        Node *root = parser.syntaxTree();
-        cout << XMLTree(root) << endl;
+        ArithmeticsParser parser(tokenizer);
+//        double expressionValue = parser.value();
+//        cout << "Value is " << expressionValue << endl;
+//        Node *root = parser.syntaxTree();
+//        cout << XMLTree(root) << endl;
 #endif
 
     } catch (BufferedStreamException &ex) {

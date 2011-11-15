@@ -59,16 +59,18 @@ private:
     int _epos;
     // true if can unget
     bool _unget;
+    bool _eof;
 public:
     const static int BUF_SIZE = 4096;
 
     BufferedStream(std::string filename) :
     _spos(0),
     _epos(0),
-    _unget(false) {
+    _unget(false),
+    _eof(false) {
         _fd = open(filename.c_str(), O_LARGEFILE | O_NOCTTY);
         if (_fd == -1) {
-            throw BufferedStreamException(strerror(errno));
+            throw BufferedStreamException(LOG_MSG(strerror(errno)));
         }
         _data = new char[BUF_SIZE];
         if (_data == NULL) {
@@ -76,11 +78,12 @@ public:
         }
     }
 
-    BufferedStream(int fd, int ungetSize = 8) :
+    BufferedStream(int fd) :
     _fd(fd),
     _spos(0),
     _epos(0),
-    _unget(false) {
+    _unget(false),
+    _eof(false) {
         _data = new char[BUF_SIZE];
         if (_data == NULL) {
             throw BufferedStreamException(LOG_MSG(strerror(errno)));
@@ -105,6 +108,7 @@ public:
             throw BufferedStreamException(LOG_MSG(strerror(errno)));
         } else if (bytesRead == 0) { // EOF
             _unget = true;
+            _eof = true;
             return 0;
         } else {
             _unget = true;
@@ -132,7 +136,7 @@ public:
     }
 
     virtual bool eof() {
-        return peek() == 0;
+        return _eof;
     }
 };
 
