@@ -4,8 +4,6 @@
 #include <string>
 #include <ostream>
 #include <iostream>
-#include "utils.h"
-
 #ifdef DEBUG_LOG_OFF
 #define DEBUG(msg)
 #else
@@ -43,6 +41,8 @@ public:
     static void warn(std::string msg, std::string file, std::string function, int line);
     static void error(std::string msg, std::string file, std::string function, int line);
 };
+
+std::string fmt(const char *fmt, ...);
 
 #endif
 

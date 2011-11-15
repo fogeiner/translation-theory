@@ -1,3 +1,8 @@
+#include <cstdio>
+#include <string>
+#include <stdarg.h>
+#include <cstdlib>
+
 #include "Logger.h"
 
 using std::string;
@@ -37,6 +42,19 @@ void Logger::warn(string msg, string file, string function, int line) {
 void Logger::error(string msg, string file, string function, int line) {
     if (_level <= Logger::ERROR)
         Logger::log(msg, "ERROR", file, function, line);
+}
+
+string fmt(const char *fmt, ...) {
+    char *c_str;
+
+    va_list ap;
+    va_start(ap, fmt);
+    vasprintf(&c_str, fmt, ap);
+    va_end(ap);
+
+    string str(c_str);
+    delete[] c_str;
+    return str;
 }
 
 

@@ -6,7 +6,6 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
-#include "utils.h"
 #include "Logger.h"
 #include "Tokenizer.h"
 
