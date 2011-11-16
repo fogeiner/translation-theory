@@ -29,8 +29,10 @@
         <runcommandpicklist>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}" ~/parse.cpp</runcommandpicklistitem>
+          <runcommandpicklistitem>echo "/*" | "${OUTPUT_PATH}"  -</runcommandpicklistitem>
+          <runcommandpicklistitem> "${OUTPUT_PATH}"  /tmp/2</runcommandpicklistitem>
         </runcommandpicklist>
-        <runcommand>"${OUTPUT_PATH}" ~/parse.cpp</runcommand>
+        <runcommand>"${OUTPUT_PATH}"  /tmp/2</runcommand>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <terminal-type>0</terminal-type>
