@@ -134,10 +134,8 @@ Tokenizer::ValueType Tokenizer::nextToken() {
 
     string token;
     while (true) {
-        int symbol;
-        if (!_stream.eof()) {
-            symbol = _stream.get();
-        }
+        int symbol = _stream.get();
+        // operations, EOF, / -> // | /*
         if (_stream.eof()) {
             token = "";
             _type = T_EOF;
@@ -237,12 +235,8 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 continue;
             } else if (next_symbol == '*') {
                 symbol = _stream.get();
-                // bugfix 2 EOFs is needed to terminal application
-                if (_stream.eof()) {
-                    continue;
-                }
                 next_symbol = _stream.get();
-                while (((symbol != '*') || (next_symbol != '/')) && !_stream.eof()) {
+                while ((symbol != '*') || (next_symbol != '/') && !_stream.eof()) {
                     symbol = next_symbol;
                     next_symbol = _stream.get();
                 }
