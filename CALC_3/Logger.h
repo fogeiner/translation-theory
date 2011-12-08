@@ -4,6 +4,7 @@
 #include <string>
 #include <ostream>
 #include <iostream>
+
 #ifdef DEBUG_LOG_OFF
 #define DEBUG(msg)
 #else
@@ -14,6 +15,7 @@
 #define ERROR(msg) Logger::error(msg, __FILE__,  __FUNCTION__,__LINE__)
 #define CRITICAL(msg) do {Logger::error(msg, __FILE__,  __FUNCTION__, __LINE__); exit(1);} while (0)
 #define LOG_MSG(msg) fmt("%s:%s:%d %s", __FILE__, __FUNCTION__ , __LINE__, msg)
+#define LOG_MSG_C(msg) fmt("%s:%s:%d %s", __FILE__, __FUNCTION__ , __LINE__, msg).c_str()
 
 class Logger {
 public:

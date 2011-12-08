@@ -5,7 +5,6 @@
 #include "Tokenizer.h"
 #include "create_map.h"
 
-#define DEBUG_LOG_OFF
 #include "Logger.h"
 #include "LocatableStream.h"
 

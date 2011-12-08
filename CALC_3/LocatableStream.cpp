@@ -1,4 +1,5 @@
 #include "LocatableStream.h"
+#define DEBUG_LOG_OFF
 #include "Logger.h"
 
 using std::string;

@@ -18,16 +18,20 @@
 #			
 #				N_TERM1, N_TERM2, N_TERM3, N_TERM4, N_TERMN,
 #					N_T1, N_T2, N_T3, N_T4, N_NUMBER};
+
+# <plus />
 def g1(name, xml_name=""):
 	if xml_name == "":
 		xml_name = name.lower();
 	return ('''{0}Node'''.format((name)), ''' "<{0} />" '''.format((xml_name)), ''' "" ''')
 
+# <Id>ident</Id>
 def g2(name, xml_name=""):
 	if xml_name == "":
 		xml_name = name.lower();
-	return ('''{0}Node'''.format((name)), ''' "<{0}>"+getToken()+"</{0}>" '''.format((xml_name)), ''' "" ''')
+	return ('''{0}Node'''.format((name)), ''' "<{0}>"+getTag()+"</{0}>" '''.format((xml_name)), ''' "" ''')
 
+# <Term> ??? <Term>
 def g3(name, xml_name=""):
 	if xml_name == "":
 		xml_name = name.lower()
@@ -36,26 +40,11 @@ def g3(name, xml_name=""):
 def main():
 #	nodes = NodeName, XMLStart, XMLEnd;
 	nodes = [
-			g2('Real'),
-			g2('Integer'),
-			g1('Power'),
-			g1('Mod'),
-			g1('Division'),
-			g1('Multiplication'),
-			g1('Minus'),
-			g1('Plus'),
-			g1('OpeningRBracket', 'opening_rbracket'),
-			g1('ClosingRBracket', 'closing_rbracket'),
-			g3('Term1'),
-			g3('Term2'),
-			g3('Term3'),
-			g3('Term4'),
-			g3('TermN'),
-			g3('T1'),
-			g3('T2'),
-			g3('T3'),
-			g3('T4'),
-			g3('Number')
+		g2('Integer'),
+		g2('Float'),
+		g2('Id'),
+		g3('Program'),
+		g3('Funcdef')
 			]
 	with open('_Nodes.h', 'wt') as f:
 		f.write('''#ifndef NODES_H

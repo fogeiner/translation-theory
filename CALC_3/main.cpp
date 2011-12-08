@@ -6,8 +6,10 @@
 #include <cassert>
 #include <cerrno>
 #include <cstring>
+
 #include "Logger.h"
 #include "Tokenizer.h"
+#include "Parser.h"
 
 using std::cin;
 using std::cout;
@@ -18,7 +20,7 @@ using std::string;
 using std::exception;
 
 int main(int argc, char** argv) {
-    Logger::setLevel(Logger::ERROR);
+    Logger::setLevel(Logger::DEBUG);
 
     if (argc <= 1) {
         CRITICAL(fmt("Usage: %s [file|-]", argv[0]));
@@ -33,17 +35,26 @@ int main(int argc, char** argv) {
             ls = new LocatableStream(argv[1]);
         }
         
-        Tokenizer tokenizer(*ls);
+        Tokenizer *tokenizer = new Tokenizer(*ls);
+		Parser *parser = new Parser(tokenizer);
 
-        for (tokenizer.nextToken();
-                tokenizer.getToken() != Tokenizer::T_EOF;
-                tokenizer.nextToken()) {
-            cout << tokenizer.getTag()
-                    << "\t" << tokenizer.getTokenDescription(tokenizer.getToken()) << '\t'
-                    << tokenizer.getLineNumber() << '\t'
-                    << tokenizer.getLinePosition() << endl;
+#define TOKENIZER_TEST
+#ifdef TOKENIZER_TEST
+        for (tokenizer->nextToken();
+                tokenizer->getToken() != Tokenizer::T_EOF;
+                tokenizer->nextToken()) {
+            cout << tokenizer->getTag()
+                    << "\t" << tokenizer->getTokenDescription(tokenizer->getToken()) << '\t'
+                    << tokenizer->getLineNumber() << '\t'
+                    << tokenizer->getLinePosition() << endl;
         }
+#endif
+    
+		delete parser;
+        delete tokenizer;
     } catch (BufferedStreamException &ex) {
+        ERROR(ex.what());
+    } catch (ParserException &ex) {
         ERROR(ex.what());
     } catch (exception &ex) {
         ERROR(ex.what());
