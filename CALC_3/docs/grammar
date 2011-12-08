@@ -1,118 +1,76 @@
-program ::= <statements>
-<statements> ::= \eps | <statement> <statements>
-<statement> ::= <declaration>; | <while> | <if>
-<while> ::= while(<boolean_expression>) { <statemenets> } [ else { } ]
-<boolean_expression> ::= true | false | ...
+<type> ::= int | float
+<id> ::= 
+<number> ::= 
 
-term1 -> term2 T1 | term2
-term2 -> term3 T2 | term3
-term3 -> term4 T3 | term4
-term4 -> termN T4 | termN
-termN -> +termN | -termN | number | (term1)
+<program> ::= <funcdefs>
 
-T1	  → ± term2 T1 | ± term2 
-T2	  → /* term3 T2 | /* term3
-T3	  → % term4 T3 | % term4
-# left-recursion? no
-T4	  → ^ T4 termN | ^ termN
+<funcdefs> ::= <funcdef> <funcdefs> | eps
+<funcdef> ::= def <type> <id> <funargs> : <statements> enddef
+<funargs> ::= <type> <id> | , <type> <id> <funargs> | eps
 
-number → real | integer 
+<statements> ::= <statement> <statements> | eps
+<statement> ::= <while> | <if> | <expression>; | <declaration>; | <assignment>; | <return>; | <print>; | <read>; 
 
-teminals: real, integer, ^, %, /, *, -, +, (, )
-non-terminals: term#, T#, number
+<print> ::= print <id>
+<read> ::= read <id>
 
-class Node
-+ string XMLStart
-+ string XMLEnd
-class NodeCreator
-+ Node *create(string token)
-class NodeFactory
-+ register(ValueType type, NodeCreator *)
-+ create(ValueType, string token)
+<funcall> ::= <id> <funcallargs>
+<funcallargs> ::= <expression> | <expression>, <funcallargs> | eps
 
-====
-At first simple grammar
+<return> ::= return <expression>
+<while> ::= while <condition> do <statements> done
+<if> ::= if <bexpression> then <statements> fi | if <bexpression> then <statements> else <statements> <fi>
 
-expr -> term T | term
-term -> factor F | factor
-factor -> number | (expr)
-T -> ± term T | ± term
-F -> */ factor F | factor
+<bexpression> ::= <bfactor> <Bfactor> | <bfactor>
+<Bfactor> ::= {and or} <bfactor> <Bfactor> | {and or} <bfactor>
+<bfactor> ::= <expression> {< > <= >= == !=} <expression> | not <bfactor> | (bexpression) | true | false 
 
-Syntax Tree XML representation
-Binary tree? But T and F require three children!
+<expression> ::= <term> <Term> | <term>
+<Term> ::= ± <term> <Term> | ± <term>  
+<term> ::= <mult> <Mult> | <mult>
+<Mult> ::= *%/ <atom> <Mult> | *%/ <atom>
+<mult> ::= <atom> <Mult> | <atom>
+<atom> ::= <id> | <number> | (<expression>) | ±<atom> | <funcall>
 
+<declaration> ::= <type> <id> <declaration2> | <type> <id> = <expression> <declaration2>
+<declaration2> ::= ,  <type> <id> | , <type> <id> = <expression> | eps
+<assignment> ::= <id> = <expression>
 
-1
-<expr>
-	<term>
-		<factor>
-			<number>1</number>
-		</factor>
-	</term>
-</expr>
+code sample
 
-1+2 = term T = term + term
-<expr>
-	<term>
-		<factor>
-		</factor>
-	</term>
-</expr>
+def float getF  
+float a, float b:
+float c;
+c = a + b;
+return c;
+enddef
 
-1+2 ->
-inner nodes == nonterminals
-leaves == terminals
-every node knows its type
-i.e.
+def int main:
+int i = 0;
+int j =0;
+float n = getF i j;
+float m = 0.0;
 
-1 + 2
-<expr>
-	<term>
-		<factor>
-			<number>1</number>
-		</factor>
-	</term>
-	<T>
-		<operation>+</operation>
-		<term>
-			<factor>
-				<number>2</number>
-			</factor>
-		</term>
-	</T>
-</expr>
+while i < 10 do
+m = m + n/i;
+done
 
-(1+2)*3
-<expr>
-	<term>
-		<factor>
-			<sign>(</sign>
-				<expr>
-					<term>
-						<factor>
-							<number>1</number>
-						</factor>
-					</term>
-					<T>
-						<operation>+</operation>
-						<term>
-							<factor>
-								<number>2</number>
-							</factor>
-						</term>
-					</T>
-				</expr>
-			<sign>)</sign>
-			<F>
-				<factor>
-					<number>3</number>
-				</factor>
-			</F>
-		</factor>
-	</term>
-</expr>
+if m < 5 then
+print(m);
+if i < 5 then
+print i;
+fi
+else
+print n;
+fi
+	
 
-Question is what are the types of nodes required?
-Answer is
-every non-terminal and every terminal requires separate node type
+i = 0;
+j = 0;
+while i < 10 do
+while j < 10 do
+print i * j;
+done
+done
+enddef
+

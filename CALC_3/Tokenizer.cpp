@@ -75,7 +75,9 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_DO, "Do")
 (T_DONE, "Done")
 (T_THEN, "Then")
-(T_FI, "Fi"); //(T_DOT, "Dot");
+//(T_DOT, "Dot")
+(T_FI, "Fi"); 
+
 
 Tokenizer::Tokenizer(LocatableStream &stream) :
 _type(Tokenizer::T_UNDEFINED),
@@ -134,7 +136,9 @@ Tokenizer::ValueType Tokenizer::nextToken() {
 
     string token;
     while (true) {
+
         int symbol = _stream.get();
+
         // operations, EOF, / -> // | /*
         if (_stream.eof()) {
             token = "";
@@ -161,7 +165,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
             token = symbol;
             _type = T_MOD;
         } else if (symbol == '=') {
-            // TODO:
             token = symbol;
             int next_symbol = _stream.get();
             if (next_symbol == '=') {
@@ -193,7 +196,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 _type = T_LESS;
                 _stream.unget();
             }
-
         } else if (symbol == '>') {
             token = symbol;
             int next_symbol = _stream.get();
@@ -204,7 +206,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 _type = T_GREATER;
                 _stream.unget();
             }
-
         } else if (symbol == '!') {
             token = symbol;
             int next_symbol = _stream.get();
@@ -215,7 +216,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 _type = T_NOT;
                 _stream.unget();
             }
-
         } else if (symbol == '#') {
             // line comment
             while ((symbol != '\n') && !_stream.eof()) {
@@ -257,7 +257,7 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 }
                 symbol = _stream.get();
             }
-
+            
             if (dots == 0) {
                 _type = T_INTEGER;
             } else if (dots == 1) {
@@ -267,7 +267,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
             } else {
                 _type = T_UNDEFINED;
             }
-
 
             _stream.unget();
 
@@ -327,7 +326,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
         }
 
         _tag = token;
-
         return _type;
     }
 }

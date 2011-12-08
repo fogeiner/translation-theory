@@ -9,9 +9,6 @@
 #include "Logger.h"
 #include "Tokenizer.h"
 
-#include "ArithmeticsParser.h"
-#include "SyntaxTree.h"
-
 using std::cin;
 using std::cout;
 using std::endl;
@@ -38,28 +35,15 @@ int main(int argc, char** argv) {
         
         Tokenizer tokenizer(*ls);
 
-        
-#define PRINT_TOKENS
-#ifdef  PRINT_TOKENS
         for (tokenizer.nextToken();
-                tokenizer.nextToken() != Tokenizer::T_EOF;
+                tokenizer.getToken() != Tokenizer::T_EOF;
                 tokenizer.nextToken()) {
             cout << tokenizer.getTag()
-                    << "\t" << tokenizer.getTokenDescription(tokenizer.nextToken()) << '\t'
+                    << "\t" << tokenizer.getTokenDescription(tokenizer.getToken()) << '\t'
                     << tokenizer.getLineNumber() << '\t'
                     << tokenizer.getLinePosition() << endl;
         }
-#else
-//        ArithmeticsParser parser(tokenizer);
-//        double expressionValue = parser.value();
-//        cout << "Value is " << expressionValue << endl;
-//        Node *root = parser.syntaxTree();
-//        cout << XMLTree(root) << endl;
-#endif
-
     } catch (BufferedStreamException &ex) {
-        ERROR(ex.what());
-    } catch (ParseException &ex) {
         ERROR(ex.what());
     } catch (exception &ex) {
         ERROR(ex.what());
