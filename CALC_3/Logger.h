@@ -7,8 +7,10 @@
 
 #ifdef DEBUG_LOG_OFF
 #define DEBUG(msg)
+#define TRACE
 #else
 #define DEBUG(msg) Logger::debug(msg, __FILE__, __FUNCTION__, __LINE__)
+#define TRACE DEBUG("")
 #endif
 
 #define WARN(msg)  Logger::warn (msg, __FILE__, __FUNCTION__, __LINE__)

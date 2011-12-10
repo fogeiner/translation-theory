@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         Tokenizer *tokenizer = new Tokenizer(*ls);
 		Parser *parser = new Parser(tokenizer);
 
-#define TOKENIZER_TEST
+//#define TOKENIZER_TEST
 #ifdef TOKENIZER_TEST
         for (tokenizer->nextToken();
                 tokenizer->getToken() != Tokenizer::T_EOF;
