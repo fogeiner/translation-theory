@@ -22,7 +22,9 @@ public:
 };
 
 #define PARSER_EXPECTED(expected) ParserException(fmt("Failed on %d:%d: expected %s", _tokenizer->getLineNumber(), _tokenizer->getLinePosition(), _tokenizer->getTokenDescription(expected).c_str()))
-#define PARSER_ILLEGAL(error) ParserException(fmt("Failed on %d:%d: illegal token %s", _tokenizer->getLineNumber(), _tokenizer->getLinePosition(), _tokenizer->getTokenDescription(error).c_str()))
+#define PARSER_ILLEGAL ParserException(fmt("Failed on %d:%d: illegal token %s", _tokenizer->getLineNumber(), _tokenizer->getLinePosition(), _tokenizer->getTokenDescription(_tokenizer->getToken()).c_str()))
+
+
 
 class Parser {
 private:
@@ -40,8 +42,9 @@ public:
 	Parser(Tokenizer *tokenizer):
 		_tokenizer(tokenizer) {
 			TRACE;
-			_tokenizer->nextToken();
 			assert(_tokenizer != NULL);
+			
+			_tokenizer->nextToken();
 			
 			parseProgram();
 			
@@ -72,12 +75,12 @@ public:
 			parseType();
 			parseId();
 			parseFunargs();
+			
 			if (!match(Tokenizer::T_COLON)) {
 				throw PARSER_EXPECTED(Tokenizer::T_COLON);
 			}
 			_tokenizer->nextToken();
 		
-			// STATEMENTS!
 			parseStatements();
 		
 			if (!match(Tokenizer::T_ENDDEF)) {
@@ -96,7 +99,7 @@ public:
 		} else if (match(Tokenizer::T_TYPE_FLOAT)) {
 			_tokenizer->nextToken();
 		} else {
-			throw PARSER_ILLEGAL(_tokenizer->getToken());
+			throw PARSER_ILLEGAL;
 		}
 	}
 	
@@ -135,17 +138,17 @@ public:
 	void parseStatements() {
 		TRACE;
 		
-		if (
-			match(Tokenizer::T_WHILE)
-			|| match(Tokenizer::T_IF)
+		if (false 
+//			|| match(Tokenizer::T_WHILE)
+//			|| match(Tokenizer::T_IF)
 			|| match(Tokenizer::T_ID)
-			|| match(Tokenizer::T_INTEGER)
-			|| match(Tokenizer::T_FLOAT)
+//			|| match(Tokenizer::T_INTEGER)
+//			|| match(Tokenizer::T_FLOAT)
 //			|| match(Tokenizer::T_OPENING_RBRACKET)
 //			|| match(Tokenizer::T_PLUS)
 //			|| match(Tokenizer::T_MINUS)
-			|| match(Tokenizer::T_TYPE_INT)
-			|| match(Tokenizer::T_TYPE_FLOAT)
+//			|| match(Tokenizer::T_TYPE_INT)
+//			|| match(Tokenizer::T_TYPE_FLOAT)
 //			|| match(Tokenizer::T_RETURN)
 //			|| match(Tokenizer::T_PRINT)
 //			|| match(Tokenizer::T_READ)
@@ -157,9 +160,181 @@ public:
 	}
 	
 	void parseStatement() {
+		TRACE;
+		//if (match(Tokenizer::T_WHILE)) {
+		//	parseWhile();
+		//} else if (match(Tokenizer::T_IF)) {
+		//	parseIf();
+		//} else 
+		if (match(Tokenizer::T_ID)) {
+			// this can be: {expression, funcall} or assignment
+			// if peek assignment -> parseAssigment
+			// else parseExpression
+			if (_tokenizer->peekToken == Tokenizer::T_ASSIGNMENT) {
+				parseAssignment();
+			}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseAssignment() {
+		TRACE;
+		if (match(Tokenizer::T_ID)) {
+			parseId();
+			if (!match(Tokenizer::T_ASSIGNMENT)) {
+				throw PARSER_EXPECTED(Tokenizer::T_ASSIGNMENT);
+			}
+			parseExpression();
+		} else {
+			throw PARSER_EXPECTED(Tokenizer::T_ID);
+		}
+	}
+	
+	bool isAtomStart() {
+		return match(Tokenizer::T_ID)
+			|| match(Tokenizer::T_INT)
+			|| match(Tokenizer::T_FLOAT)
+			|| match(Tokenizer::T_OPENING_RBRACKET)
+			|| match(Tokenizer::T_MINUS)
+			|| match(Tokenizer::T_PLUS);
+	}
+	
+	void parseExpression() {
+		TRACE;
+		if (isAtomStart()) {
+				parseterm();
+				if (match(Tokenizer::T_PLUS)
+					|| match(Tokenizer::T_MINUS)) {
+					parseTerm();
+				}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseterm() {
+		TRACE;
+		if (isAtomStart()) {
+			parsemult();
+			if (match(Tokenizer::T_MULT)
+				|| match(Tokenizer::T_DIV)
+				|| match(Tokenizer::T_MOD)) {
+					parseMult();
+			}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseTerm() {
+		TRACE;
+		if (match(Tokenizer::T_PLUS)) {
+			_tokenizer->nextToken();
+			parseterm();
+			
+			if (match(Tokenizer::T_PLUS)
+				|| match(Tokenizer::T_MINUS)) {	
+				parseTerm();
+			}
+		} else if (match(Tokenizer::T_MINUS)) {
+			_tokenizer->nextToken();
+			parseterm();
+			
+			if (match(Tokenizer::T_PLUS)
+				|| match(Tokenizer::T_MINUS)) {	
+				parseTerm();
+			}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parsemult() {
+		TRACE;
+		if (isAtomStart()) {
+			parseAtom();
+			
+			if (match(Tokenizer::T_MULT)
+				|| match(Tokenizer::T_DIV)
+				|| match(Tokenizer::T_MOD)) {
+				parseMult();
+			}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseMult() {
+		TRACE;
+		if (match(Tokenizer::T_MULT)) {
+			_tokenizer->nextToken();
+			parseAtom();
+			if (match(Tokenizer::T_MULT)
+				|| match(Tokenizer::T_DIV) 
+				|| match(Tokenizer::T_MOD)) {
+				parseMult();
+			}
+		} else if (match(Tokenizer::T_DIV)) {
+			_tokenizer->nextToken();
+			parseAtom();
+			if (match(Tokenizer::T_MULT)
+				|| match(Tokenizer::T_DIV) 
+				|| match(Tokenizer::T_MOD)) {
+				parseMult();
+			}
+		} else if (match(Tokenizer::T_MOD)) {
+			_tokenizer->nextToken();
+			parseAtom();
+			if (match(Tokenizer::T_MULT)
+				|| match(Tokenizer::T_DIV) 
+				|| match(Tokenizer::T_MOD)) {
+				parseMult();
+			}
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseAtom() {
+		TRACE;
+		if (match(Tokenizer::T_ID)) {
+		} else if (match(Tokenizer::T_INT)) {
+		} else if (match(Tokenizer::T_FLOAT)) {
+		} else if (match(Tokenizer::T_OPENING_RBRACKET)) {
+		} else if (match(Tokenizer::T_PLUS)) {
+		} else if (match(Tokenizer::T_MINUS)) {
+		} else {
+			throw PARSER_ILLEGAL;
+		}
+	}
+	
+	void parseWhile() { // TODO:
+		TRACE;
 		if (match(Tokenizer::T_WHILE)) {
-			parseWhi
-		} else 
+			_tokenizer->nextToken();
+			// parseBexpression
+			// match do
+			// parseStatements
+			// match done
+		} else {
+			throw PARSER_EXPECTED(Tokenizer::T_WHILE);
+		}
+	}
+	
+	void parseIf() { // TODO:
+		TRACE;
+		if (match(Tokenizer::T_IF)) {
+			_tokenizer->nextToken();
+			// parseBexpression
+			// match then
+			// parseStatements
+			// if T_FI -> return
+			// else if T_ELSE -> parseStatements, match T_FI
+			// else throw ILLEGAL
+		} else {
+			throw PARSER_EXPECTED(Tokenizer::T_IF);
+		}
 	}
 };
 

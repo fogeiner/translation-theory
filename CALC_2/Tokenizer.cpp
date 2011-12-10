@@ -176,6 +176,9 @@ Tokenizer::ValueType Tokenizer::nextToken() {
         } else if (symbol == ';') {
             token = symbol;
             _type = T_SEMICOLON;
+		} else if (symbol == ':') {
+            token = symbol;
+            _type = T_COLON;
         } else if (symbol == '(') {
             token = symbol;
             _type = T_OPENING_RBRACKET;
