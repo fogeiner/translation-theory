@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 CC=g++
-
+CPPFLAGS+= -g
 main: main.o BufferedStream.o Logger.o LocatableStream.o Tokenizer.o Parser.o
 
 main.o: main.cpp
