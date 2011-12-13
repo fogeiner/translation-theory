@@ -19,7 +19,7 @@ using std::istream;
 using std::string;
 using std::exception;
 
-int main(int argc, char** argv) {
+int main2(int argc, char** argv) {
     Logger::setLevel(Logger::DEBUG);
 
     if (argc <= 1) {
@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
         } else {
             ls = new LocatableStream(argv[1]);
         }
-        
+
         Tokenizer *tokenizer = new Tokenizer(*ls);
-		Parser *parser = new Parser(tokenizer);
+        Parser *parser = new Parser(tokenizer);
 
 //#define TOKENIZER_TEST
 #ifdef TOKENIZER_TEST
@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
                     << tokenizer->getLinePosition() << endl;
         }
 #endif
-    
-		delete parser;
+
+        delete parser;
         delete tokenizer;
     } catch (BufferedStreamException &ex) {
         ERROR(ex.what());
@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
     } catch (exception &ex) {
         ERROR(ex.what());
     }
-    
+
     delete ls;
-    
+
     return EXIT_SUCCESS;
 }

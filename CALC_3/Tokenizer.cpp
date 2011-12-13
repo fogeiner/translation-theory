@@ -75,7 +75,7 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_DONE, "Done")
 (T_THEN, "Then")
 //(T_DOT, "Dot")
-(T_FI, "Fi"); 
+(T_FI, "Fi");
 
 
 Tokenizer::Tokenizer(LocatableStream &stream) :
@@ -183,18 +183,18 @@ Tokenizer::ValueType Tokenizer::nextToken() {
             token = symbol;
             _type = T_CLOSING_RBRACKET;
         } else if (symbol == '[') {
-			token = symbol
-			_type = T_OPENING_SBRACKET;
-		} else if (symbol == ']') {
-			token = symbol;
-			_type = T_CLOSING_SBRACKET;
-		} else if (symbol = '{') {
-			token = symbol;
-			_type = T_OPENING_CBRACKET;
-		} else if (symbol == '}') {
-			token = symbol;
-			_type = T_CLOSING_CBRACKET;
-		} else if (symbol == ',') {
+            token = symbol;
+            _type = T_OPENING_SBRACKET;
+        } else if (symbol == ']') {
+            token = symbol;
+            _type = T_CLOSING_SBRACKET;
+        } else if (symbol = '{') {
+            token = symbol;
+            _type = T_OPENING_CBRACKET;
+        } else if (symbol == '}') {
+            token = symbol;
+            _type = T_CLOSING_CBRACKET;
+        } else if (symbol == ',') {
             token = symbol;
             _type = T_COMMA;
         } else if (symbol == '<') {
@@ -268,7 +268,7 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 }
                 symbol = _stream.get();
             }
-            
+
             if (dots == 0) {
                 _type = T_INTEGER;
             } else if (dots == 1) {

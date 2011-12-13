@@ -153,7 +153,7 @@ public:
 
 class TypeNode: public Node {
 private:
-    virtual std::string _getDefaultXMLTag() const  {
+    virtual std::string _getDefaultXMLTag() const {
         return "type";
     }
 };
@@ -218,6 +218,213 @@ class WhileNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
         return "while";
+    }
+};
+
+class FuncallNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "funcall";
+    }
+};
+
+class BexpressionNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "bexpression";
+    }
+};
+
+class BdisjNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "bdisj";
+    }
+};
+
+class BDisjNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "bDisj";
+    }
+};
+
+class BconjNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "bconj";
+    }
+};
+
+class BConjNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "bConj";
+    }
+};
+
+class BAtomNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "batom";
+    }
+};
+
+class CmpNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "--- auxiliary cmp node ---";
+    }
+};
+
+class CmpLessNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmpless";
+    }
+};
+
+class CmpGreaterNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmpgreater";
+    }
+};
+
+class CmpLessOrEqualNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmplessorequal";
+    }
+};
+
+class CmpGreaterOrEqualNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmpgreaterorequal";
+    }
+};
+
+class CmpEqualNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmpequal";
+    }
+};
+
+class CmpNotEqualNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "cmpnotequal";
+    }
+};
+
+class TrueNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "true";
+    }
+};
+
+class FalseNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "false";
+    }
+};
+
+class NotNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "not";
+    }
+};
+
+class ExpressionNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "expression";
+    }
+};
+
+class termNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "term";
+    }
+};
+
+class multNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "mult";
+    }
+};
+
+class NegationNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "negation";
+    }
+};
+
+class PlusTermNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "plusterm";
+    }
+};
+
+class MinusTermNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "minusterm";
+    }
+};
+
+class MultMultNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "multmult";
+    }
+};
+
+class ModMultNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "modmult";
+    }
+};
+
+class DivMultNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "divmult";
+    }
+};
+
+class AtomNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "atom";
+    }
+};
+
+class IntegerNode: public Node {
+public:
+    IntegerNode(std::string integer): Node(integer) {}
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "integer";
+    }
+};
+
+class FloatNode: public Node {
+public:
+    FloatNode(std::string flt): Node(flt) {}
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "float";
     }
 };
 
@@ -516,74 +723,217 @@ public:
         }
     }
 
-	bool isBatomStart() {
-		bool result = false	
-			|| isAtomStart()
-			|| match(Tokenizer::T_NOT)
-			|| match(Tokenizer::T_OPENING_SBRACKET)
-			|| match(Tokenizer::T_TRUE)
-			|| match(Tokenizer::T_FALSE);
-			
-		return result;
-	}
-	
-	bool isAtomStart() {
-		bool result = false
-			|| match(Tokenizer::T_ID)
-			|| match(Tokenizer::T_INTEGER)
-			|| match(Tokenizer::T_FLOAT)
-			|| match(Tokenizer::T_OPENING_RBRACKET)
-			|| match(Tokenizer::T_PLUS)
-			|| match(Tokenizer::T_MINUS)
-			|| match(Tokenizer::T_OPENING_CBRACKET);
-			
-		return result;
-	}
+    bool isbAtomStart() {
+        bool result = false
+            || isAtomStart()
+            || match(Tokenizer::T_NOT)
+            || match(Tokenizer::T_OPENING_SBRACKET)
+            || match(Tokenizer::T_TRUE)
+            || match(Tokenizer::T_FALSE);
 
-	void parseFuncall(Node *node) {
-		TRACE;
-	}
-	
-	void parseFuncargs(Node *node) {
-		TRACE;
-	}
-	
-	void parseFuncargsrest(Node *node) {
-		TRACE;
-	}
+        return result;
+    }
 
-	void parseBexpression(Node *node) {
-		TRACE;
-	}
-	
-	void parsebconj(Node *node) {
-		TRACE;
-	}
-	
-	void parseBconj(Node *node) {
-		TRACE;
-	}
-	
-	void parsebdisj(Node *node) {
-		TRACE;
-	}
-	
-	void parseBdisj(Node *node) {
-		TRACE;
-	}
-	
-	void parseBatom(Node *node) {
-		TRACE;
-	}
+    bool isAtomStart() {
+        bool result = false
+            || match(Tokenizer::T_ID)
+            || match(Tokenizer::T_INTEGER)
+            || match(Tokenizer::T_FLOAT)
+            || match(Tokenizer::T_OPENING_RBRACKET)
+            || match(Tokenizer::T_PLUS)
+            || match(Tokenizer::T_MINUS)
+            || match(Tokenizer::T_OPENING_CBRACKET);
+
+        return result;
+    }
+
+    void parseFuncall(Node *node) {
+        TRACE;
+
+        if (match(Tokenizer::T_OPENING_CBRACKET)) {
+            _tokenizer->nextToken();
+            Node *node_funcall = new FuncallNode();
+            parseId(node_funcall);
+            parseFuncallargs(node_funcall);
+            if (!match(Tokenizer::T_CLOSING_CBRACKET)) {
+                throw PARSER_EXPECTED(Tokenizer::T_CLOSING_CBRACKET);
+            }
+            node->addChild(node_funcall);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_OPENING_CBRACKET);
+        }
+    }
+
+    void parseFuncallargs(Node *node) {
+        TRACE;
+
+        if (isAtomStart()) {
+            Node *node_expression = new ExpressionNode();
+            parseExpression(node_expression);
+            node->addChild(node_expression);
+            parseFuncallargsrest(node);
+        }
+        // eps
+    }
+
+    void parseFuncallargsrest(Node *node) {
+        TRACE;
+
+        if (match(Tokenizer::T_COMMA)) {
+            _tokenizer->nextToken();
+            Node *node_expression = new ExpressionNode();
+            parseExpression(node_expression);
+            node->addChild(node_expression);
+            parseFuncallargsrest(node);
+        }
+        // eps
+    }
+
+    void parseBexpression(Node *node) {
+        TRACE;
+
+        if (isbAtomStart()) {
+            Node *node_bexpression = new BexpressionNode();
+            parsebdisj(node_bexpression);
+            if (match(Tokenizer::T_OR)) {
+                parsebDisj(node_bexpression);
+            }
+            node->addChild(node_bexpression);
+        } else {
+            throw PARSER_ILLEGAL;
+        }
+    }
+
+
+    void parsebdisj(Node *node) {
+        TRACE;
+
+        if (isbAtomStart()) {
+            Node *node_bdisj = new BdisjNode();
+            parsebAtom(node_bdisj);
+            if (match(Tokenizer::T_AND)) {
+                parsebConj(node_bdisj);
+            }
+            node->addChild(node_bdisj);
+        } else {
+            throw PARSER_ILLEGAL;
+        }
+    }
+
+    void parsebDisj(Node *node) {
+        TRACE;
+
+        if (match(Tokenizer::T_OR)) {
+            _tokenizer->nextToken();
+            Node *node_bDisj = new BDisjNode();
+            parsebdisj(node_bDisj);
+            if (match(Tokenizer::T_OR)) {
+                parsebDisj(node_bDisj);
+            }
+            node->addChild(node_bDisj);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_OR);
+        }
+    }
+
+    void parsebConj(Node *node) {
+        TRACE;
+
+        if (match(Tokenizer::T_AND)) {
+            _tokenizer->nextToken();
+            Node *node_bConj = new BConjNode();
+            parsebAtom(node_bConj);
+            if (match(Tokenizer::T_AND)) {
+                parsebConj(node_bConj);
+            }
+            node->addChild(node_bConj);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_OR);
+        }
+
+    }
+
+    void parsebAtom(Node *node) {
+        TRACE;
+
+        if (isbAtomStart()) {
+            Node *node_batom = new BAtomNode();
+
+            if (isAtomStart()) {
+                parseCmp(node_batom);
+            } else if (match(Tokenizer::T_NOT)) {
+                   _tokenizer->nextToken();
+                    Node *node_not = new NotNode();
+                    parsebAtom(node_not);
+                    node_batom->addChild(node_not);
+            } else if (match(Tokenizer::T_OPENING_SBRACKET)) {
+                _tokenizer->nextToken();
+                parseBexpression(node_batom);
+                if (!match(Tokenizer::T_CLOSING_SBRACKET)) {
+                    throw PARSER_EXPECTED(Tokenizer::T_CLOSING_SBRACKET);
+                }
+                _tokenizer->nextToken();
+            } else if (match(Tokenizer::T_TRUE)) {
+                _tokenizer->nextToken();
+                Node *node_true = new TrueNode();
+                node_batom->addChild(node_true);
+            } else if (match(Tokenizer::T_FALSE)) {
+                _tokenizer->nextToken();
+                Node *node_false = new FalseNode();
+                node_batom->addChild(node_false);
+            } else {
+                throw PARSER_ILLEGAL;
+            }
+
+            node->addChild(node_batom);
+        } else {
+            throw PARSER_ILLEGAL;
+        }
+    }
+
+
+    void parseCmp(Node *node) {
+        TRACE;
+
+        if (isAtomStart()) {
+            Node *node_cmp_aux = new CmpNode();
+            Node *node_cmp = NULL;
+            parseExpression(node_cmp_aux);
+            if (match(Tokenizer::T_LESS)) {
+                node_cmp = new CmpLessNode();
+            } else if (match(Tokenizer::T_LESS_OR_EQUAL)) {
+                node_cmp = new CmpLessOrEqualNode();
+            } else if (match(Tokenizer::T_GREATER)) {
+                node_cmp = new CmpGreaterNode();
+            } else if (match(Tokenizer::T_GREATER_OR_EQUAL)) {
+                node_cmp = new CmpGreaterOrEqualNode();
+            } else if (match(Tokenizer::T_EQUAL)) {
+                node_cmp = new CmpEqualNode();
+            } else if (match(Tokenizer::T_NOT_EQUAL)) {
+                node_cmp = new CmpNotEqualNode();
+            } else {
+                throw PARSER_ILLEGAL;
+            }
+            node_cmp->addChild((*node_cmp_aux)[0]);
+            delete node_cmp_aux;
+            parseExpression(node_cmp);
+            node->addChild(node_cmp);
+        } else {
+            throw PARSER_ILLEGAL;
+        }
+    }
 
     void parseExpression(Node *node) {
         TRACE;
         if (isAtomStart()) {
-                parseterm();
-                if (match(Tokenizer::T_PLUS)
-                    || match(Tokenizer::T_MINUS)) {
-                    parseTerm(node);
+                Node *node_expression = new ExpressionNode();
+                parseterm(node_expression);
+                if (match(Tokenizer::T_PLUS)) {
+                    parseTerm(node_expression);
+                } else if (match(Tokenizer::T_MINUS)) {
+                    parseTerm(node_expression);
                 }
+                node->addChild(node_expression);
         } else {
             throw PARSER_ILLEGAL;
         }
@@ -591,36 +941,16 @@ public:
 
     void parseterm(Node *node) {
         TRACE;
+
         if (isAtomStart()) {
-            parsemult();
+            Node *node_term = new termNode();
+            parsemult(node_term);
             if (match(Tokenizer::T_MULT)
-                || match(Tokenizer::T_DIV)
-                || match(Tokenizer::T_MOD)) {
-                    parseMult(node);
+                || match(Tokenizer::T_MOD)
+                || match(Tokenizer::T_DIV)) {
+                    parseMult(node_term);
             }
-        } else {
-            throw PARSER_ILLEGAL;
-        }
-    }
-
-    void parseTerm(Node *node) {
-        TRACE;
-        if (match(Tokenizer::T_PLUS)) {
-            _tokenizer->nextToken();
-            parseterm(node);
-
-            if (match(Tokenizer::T_PLUS)
-                || match(Tokenizer::T_MINUS)) {
-                parseTerm(node);
-            }
-        } else if (match(Tokenizer::T_MINUS)) {
-            _tokenizer->nextToken();
-            parseterm(node);
-
-            if (match(Tokenizer::T_PLUS)
-                || match(Tokenizer::T_MINUS)) {
-                parseTerm(node);
-            }
+            node->addChild(node_term);
         } else {
             throw PARSER_ILLEGAL;
         }
@@ -628,45 +958,75 @@ public:
 
     void parsemult(Node *node) {
         TRACE;
-        if (isAtomStart()) {
-            parseAtom(node);
 
+        if (isAtomStart()) {
+            Node *node_mult = new multNode();
+            parseAtom(node_mult);
             if (match(Tokenizer::T_MULT)
-                || match(Tokenizer::T_DIV)
-                || match(Tokenizer::T_MOD)) {
-                parseMult(node);
+                || match(Tokenizer::T_MOD)
+                || match(Tokenizer::T_DIV)) {
+                    parseMult(node_mult);
             }
+            node->addChild(node_mult);
         } else {
             throw PARSER_ILLEGAL;
         }
     }
 
-    void parseMult() {
+    void parseTerm(Node *node) {
         TRACE;
-        if (match(Tokenizer::T_MULT)) {
-            _tokenizer->nextToken();
-            parseAtom();
-            if (match(Tokenizer::T_MULT)
-                || match(Tokenizer::T_DIV)
-                || match(Tokenizer::T_MOD)) {
-                parseMult(node);
+        if (match(Tokenizer::T_PLUS)
+            || match(Tokenizer::T_MINUS)) {
+            Node *node_Term = NULL;
+
+            if (match(Tokenizer::T_PLUS)) {
+                node_Term = new PlusTermNode();
+            } else if (match(Tokenizer::T_MINUS)) {
+                node_Term = new MinusTermNode();
+            } else {
+                assert(false);
             }
-        } else if (match(Tokenizer::T_DIV)) {
             _tokenizer->nextToken();
-            parseAtom(node);
-            if (match(Tokenizer::T_MULT)
-                || match(Tokenizer::T_DIV)
-                || match(Tokenizer::T_MOD)) {
-                parseMult(node);
+
+            parseterm(node_Term);
+            if (match(Tokenizer::T_PLUS)
+                || match(Tokenizer::T_MINUS)) {
+                parseTerm(node_Term);
             }
-        } else if (match(Tokenizer::T_MOD)) {
+
+            node->addChild(node_Term);
+        } else {
+            throw PARSER_ILLEGAL;
+        }
+    }
+
+    void parseMult(Node *node) {
+        TRACE;
+
+        if (match(Tokenizer::T_MULT)
+            || match(Tokenizer::T_MOD)
+            || match(Tokenizer::T_DIV)) {
+            Node *node_Mult = NULL;
+
+            if (match(Tokenizer::T_MULT)) {
+                node_Mult = new MultMultNode();
+            } else if (match(Tokenizer::T_MOD)) {
+                node_Mult = new ModMultNode();
+            } else if (match(Tokenizer::T_DIV)) {
+                node_Mult = new DivMultNode();
+            } else {
+                assert(false);
+            }
             _tokenizer->nextToken();
-            parseAtom();
+
+            parseAtom(node_Mult);
             if (match(Tokenizer::T_MULT)
-                || match(Tokenizer::T_DIV)
-                || match(Tokenizer::T_MOD)) {
-                parseMult(node);
+            || match(Tokenizer::T_MOD)
+            || match(Tokenizer::T_DIV)){
+                parseMult(node_Mult);
             }
+
+            node->addChild(node_Mult);
         } else {
             throw PARSER_ILLEGAL;
         }
@@ -674,24 +1034,45 @@ public:
 
     void parseAtom(Node *node) {
         TRACE;
-        if (match(Tokenizer::T_ID)) {
-        } else if (match(Tokenizer::T_INTEGER)) {
-        } else if (match(Tokenizer::T_FLOAT)) {
-        } else if (match(Tokenizer::T_OPENING_RBRACKET)) {
-        } else if (match(Tokenizer::T_PLUS)) {
-        } else if (match(Tokenizer::T_MINUS)) {
+        if (isAtomStart()) {
+            Node *node_atom = new AtomNode();
+            if (match(Tokenizer::T_ID)) {
+                parseId(node_atom);
+            } else if (match(Tokenizer::T_INTEGER)) {
+                Node *node_integer = new IntegerNode(_tokenizer->getTag());
+                _tokenizer->nextToken();
+                node_atom->addChild(node_integer);
+            } else if (match(Tokenizer::T_FLOAT)) {
+                Node *node_float = new FloatNode(_tokenizer->getTag());
+                _tokenizer->nextToken();
+                node_atom->addChild(node_float);
+            } else if (match(Tokenizer::T_OPENING_RBRACKET)) {
+                _tokenizer->nextToken();
+                parseExpression(node_atom);
+                if (!match(Tokenizer::T_CLOSING_RBRACKET)) {
+                    throw PARSER_EXPECTED(Tokenizer::T_CLOSING_RBRACKET);
+                }
+                _tokenizer->nextToken();
+            } else if (match(Tokenizer::T_PLUS)) {
+                // unary plus -- just ignore
+                _tokenizer->nextToken();
+                parseAtom(node_atom);
+            } else if (match(Tokenizer::T_MINUS)) {
+                _tokenizer->nextToken();
+                Node *node_negation = new NegationNode();
+                parseAtom(node_negation);
+                node_atom->addChild(node_negation);
+            } else if (match(Tokenizer::T_OPENING_CBRACKET)) {
+                parseFuncall(node_atom);
+            } else {
+                assert(false);
+            }
+            node->addChild(node_atom);
         } else {
             throw PARSER_ILLEGAL;
         }
     }
 
 };
-
-#include <cstdio>
-int main() {
-    ProgramNode pn;
-    ::printf("%s\n%s\n", pn.XMLStart().c_str(), pn.XMLEnd().c_str());
-    return 0;
-}
 
 #endif
