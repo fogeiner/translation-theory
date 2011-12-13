@@ -118,6 +118,15 @@ private:
         }
 };
 
+class FuncdefNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "funcdef";
+    }
+public:
+    FuncdefNode(std::string id): Node(id) {}
+};
+
 class TypeIntNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
@@ -142,7 +151,75 @@ public:
     Node(id) {}
 };
 
+class TypeNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const  {
+        return "type";
+    }
+};
 
+class FuncargsNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "funcargs";
+    }
+};
+
+class FuncargNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "funarg";
+    }
+};
+
+class StatementsNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "statements";
+    }
+};
+
+class ReturnNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "return";
+    }
+};
+
+class ReadNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "read";
+    }
+};
+
+class PrintNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "print";
+    }
+};
+
+class AssignmentNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "assignment";
+    }
+};
+
+class IfNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "if";
+    }
+};
+
+class WhileNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "while";
+    }
+};
 
 class Parser {
 private:
@@ -162,7 +239,6 @@ public:
         _tokenizer(tokenizer) {
             TRACE;
             assert(_tokenizer != NULL);
-
 
             _tokenizer->nextToken();
             parseProgram(&_root);
@@ -190,23 +266,39 @@ public:
     void parseFuncdef(Node *node) {
         TRACE;
         if (match(Tokenizer::T_DEF)) {
+            Node *node_funcdef = new FuncdefNode(_tokenizer->getTag());
             _tokenizer->nextToken();
 
-            parseType(node);
-            parseId(node);
-            parseFunargs(node);
+            Node *node_type = new TypeNode();
+            parseType(node_type);
+            node_funcdef->addChild(node_type);
 
-            if (!match(Tokenizer::T_COLON)) {
-                throw PARSER_EXPECTED(Tokenizer::T_COLON);
+            parseId(node_funcdef);
+
+            Node *node_funcargs = new FuncargsNode();
+            parseFunargs(node_funcargs);
+            node_funcdef->addChild(node_funcargs);
+
+            if (match(Tokenizer::T_ENDDEF)) {
+                // with no body; just declaration
+                _tokenizer->nextToken();
+            } else if (match(Tokenizer::T_COLON)) {
+                // with body;
+                _tokenizer->nextToken();
+
+                Node *node_statements = new StatementsNode();
+                parseStatements(node_statements);
+                node_funcdef->addChild(node_statements);
+
+                if (!match(Tokenizer::T_ENDDEF)) {
+                    throw PARSER_EXPECTED(Tokenizer::T_ENDDEF);
+                }
+                _tokenizer->nextToken();
+
+                node->addChild(node_funcdef);
+            } else {
+                throw PARSER_ILLEGAL;
             }
-            _tokenizer->nextToken();
-
-            parseStatements(node);
-
-            if (!match(Tokenizer::T_ENDDEF)) {
-                throw PARSER_EXPECTED(Tokenizer::T_ENDDEF);
-            }
-            _tokenizer->nextToken();
         } else {
             PARSER_EXPECTED(Tokenizer::T_DEF);
         }
@@ -240,8 +332,10 @@ public:
 
         if (match(Tokenizer::T_TYPE_INT)
             || match(Tokenizer::T_TYPE_FLOAT)) {
-            parseType(node);
-            parseId(node);
+            Node *node_funcarg = new FuncargNode();
+            parseType(node_funcarg);
+            parseId(node_funcarg);
+            node->addChild(node_funcarg);
             parseFunargsrest(node);
         }
         // eps
@@ -252,7 +346,10 @@ public:
 
         if (match(Tokenizer::T_COMMA)) {
             _tokenizer->nextToken();
-            parseId(node);
+            Node *node_funcarg = new FuncargNode();
+            parseType(node_funcarg);
+            parseId(node_funcarg);
+            node->addChild(node_funcarg);
             parseFunargsrest(node);
         }
         // eps
@@ -261,67 +358,168 @@ public:
     void parseStatements(Node *node) {
         TRACE;
 
-        if (false
-//          || match(Tokenizer::T_WHILE)
-//          || match(Tokenizer::T_IF)
-            || match(Tokenizer::T_ID)
-//          || match(Tokenizer::T_INTEGER)
-//          || match(Tokenizer::T_FLOAT)
-//          || match(Tokenizer::T_OPENING_RBRACKET)
-//          || match(Tokenizer::T_PLUS)
-//          || match(Tokenizer::T_MINUS)
-//          || match(Tokenizer::T_TYPE_INT)
-//          || match(Tokenizer::T_TYPE_FLOAT)
-//          || match(Tokenizer::T_RETURN)
-//          || match(Tokenizer::T_PRINT)
-//          || match(Tokenizer::T_READ)
-            ) {
-                parseStatement(node);
-                parseStatements(node);
-            }
-            // eps
+        if (match(Tokenizer::T_WHILE)) {
+            parseWhile(node);
+        } else if (match(Tokenizer::T_IF)) {
+            parseIf(node);
+        } else if (match(Tokenizer::T_ID)) {
+            parseAssignment(node);
+        } else if (match(Tokenizer::T_TYPE_INT)) {
+            parseDeclaration(node);
+        } else if (match(Tokenizer::T_TYPE_FLOAT)) {
+            parseDeclaration(node);
+        } else if (match(Tokenizer::T_RETURN)) {
+            parseReturn(node);
+        } else if (match(Tokenizer::T_PRINT)) {
+            parsePrint(node);
+        } else if (match(Tokenizer::T_READ)) {
+            parseRead(node);
+        }
+        // eps
     }
 
-    void parseStatement(Node *node) {
+    void parseDeclaration(Node *node) {
         TRACE;
-        //if (match(Tokenizer::T_WHILE)) {
-        //  parseWhile();
-        //} else if (match(Tokenizer::T_IF)) {
-        //  parseIf();
-        //} else
-        if (match(Tokenizer::T_ID)) {
-            // this can be: {expression, funcall} or assignment
-            // if peek assignment -> parseAssigment
-            // else parseExpression
-            if (_tokenizer->peekToken() == Tokenizer::T_ASSIGNMENT) {
-                parseAssignment(node);
-            }
+        if (match(Tokenizer::T_TYPE_INT)) {
+            _tokenizer->nextToken();
+
+            Node *node_type = new TypeNode();
+            node_type->addChild(new TypeIntNode());
+            parseId(node_type);
+            node->addChild(node_type);
+        } else if (match(Tokenizer::T_TYPE_FLOAT)) {
+            _tokenizer->nextToken();
+
+            Node *node_type = new TypeNode();
+            node_type->addChild(new TypeFloatNode());
+            parseId(node_type);
+            node->addChild(node_type);
         } else {
             throw PARSER_ILLEGAL;
+        }
+    }
+
+    void parseReturn(Node *node) {
+        TRACE;
+        if (match(Tokenizer::T_RETURN)) {
+            _tokenizer->nextToken();
+            Node *node_return = new ReturnNode();
+            parseExpression(node_return);
+            node->addChild(node_return);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_RETURN);
+        }
+    }
+
+    void parsePrint(Node *node) {
+        TRACE;
+        if (match(Tokenizer::T_PRINT)) {
+            _tokenizer->nextToken();
+            Node *node_print = new PrintNode();
+            parseExpression(node_print);
+            node->addChild(node_print);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_PRINT);
+        }
+    }
+
+    void parseRead(Node *node) {
+        TRACE;
+        if (match(Tokenizer::T_READ)) {
+            _tokenizer->nextToken();
+            Node *node_read = new PrintNode();
+            parseId(node_read);
+            node->addChild(node_read);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_READ);
         }
     }
 
     void parseAssignment(Node *node) {
         TRACE;
         if (match(Tokenizer::T_ID)) {
-            parseId();
+            Node *node_assignment = new AssignmentNode();
+            parseId(node_assignment);
             if (!match(Tokenizer::T_ASSIGNMENT)) {
                 throw PARSER_EXPECTED(Tokenizer::T_ASSIGNMENT);
             }
-            parseExpression(node);
+            parseExpression(node_assignment);
+            node->addChild(node_assignment);
         } else {
             throw PARSER_EXPECTED(Tokenizer::T_ID);
         }
     }
 
-    bool isAtomStart(Node *node) {
-        return match(Tokenizer::T_ID)
-            || match(Tokenizer::T_INTEGER)
-            || match(Tokenizer::T_FLOAT)
-            || match(Tokenizer::T_OPENING_RBRACKET)
-            || match(Tokenizer::T_MINUS)
-            || match(Tokenizer::T_PLUS);
+    void parseWhile(Node *node) { // TODO:
+        TRACE;
+        if (match(Tokenizer::T_WHILE)) {
+            _tokenizer->nextToken();
+
+            Node *node_while = new WhileNode();
+            // parseBexpression
+            parseBexpression(node_while);
+            // match do
+            if (!match(Tokenizer::T_DO)) {
+                throw PARSER_EXPECTED(Tokenizer::T_DO);
+            }
+            _tokenizer->nextToken();
+
+            // parseStatements
+            parseStatements(node_while);
+            // match done
+            if (!match(Tokenizer::T_DONE)) {
+                throw PARSER_EXPECTED(Tokenizer::T_DONE);
+            }
+
+            node->addChild(node_while);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_WHILE);
+        }
     }
+
+    void parseIf(Node *node) { // TODO:
+        TRACE;
+        if (match(Tokenizer::T_IF)) {
+            _tokenizer->nextToken();
+            Node *node_if = new IfNode();
+            // parseBexpression
+            parseBexpression(node_if);
+
+            // match then
+            if (!match(Tokenizer::T_THEN)) {
+                throw PARSER_EXPECTED(Tokenizer::T_THEN);
+            }
+            _tokenizer->nextToken();
+
+            // parseStatements
+            parseStatements(node_if);
+
+            if (match(Tokenizer::T_ELSE)) {
+                // else if T_ELSE -> parseStatements, match T_FI
+                _tokenizer->nextToken();
+                parseStatements(node_if);
+
+                if (!match(Tokenizer::T_FI)) {
+                    throw PARSER_EXPECTED(Tokenizer::T_FI);
+                }
+            } else if (match(Tokenizer::T_FI)) {
+                // if T_FI -> return
+                _tokenizer->nextToken();
+            } else {
+                // else throw ILLEGAL
+                throw PARSER_ILLEGAL;
+            }
+
+            node->addChild(node_if);
+        } else {
+            throw PARSER_EXPECTED(Tokenizer::T_IF);
+        }
+    }
+
+    void parseBexpression(Node *node) {
+        TRACE;
+    }
+
 
     void parseExpression(Node *node) {
         TRACE;
@@ -432,34 +630,8 @@ public:
         }
     }
 
-    void parseWhile(Node *node) { // TODO:
-        TRACE;
-        if (match(Tokenizer::T_WHILE)) {
-            _tokenizer->nextToken();
-            // parseBexpression
-            // match do
-            // parseStatements
-            // match done
-        } else {
-            throw PARSER_EXPECTED(Tokenizer::T_WHILE);
-        }
-    }
-
-    void parseIf(Node *node) { // TODO:
-        TRACE;
-        if (match(Tokenizer::T_IF)) {
-            _tokenizer->nextToken();
-            // parseBexpression
-            // match then
-            // parseStatements
-            // if T_FI -> return
-            // else if T_ELSE -> parseStatements, match T_FI
-            // else throw ILLEGAL
-        } else {
-            throw PARSER_EXPECTED(Tokenizer::T_IF);
-        }
-    }
 };
+
 #include <cstdio>
 int main() {
     ProgramNode pn;
