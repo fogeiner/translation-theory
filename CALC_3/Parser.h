@@ -126,8 +126,6 @@ private:
     virtual std::string _getDefaultXMLTag() const {
         return "funcdef";
     }
-public:
-    FuncdefNode(std::string id): Node(id) {}
 };
 
 class TypeIntNode: public Node {
@@ -482,13 +480,7 @@ public:
         if (match(Tokenizer::T_DEF)) {
             _tokenizer->nextToken();
 
-            Node *node_funcdef = NULL;
-            if (match(Tokenizer::T_ID)) {
-                node_funcdef = new FuncdefNode(_tokenizer->getTag());
-            } else {
-                throw PARSER_EXPECTED(Tokenizer::T_ID);
-            }
-
+            Node *node_funcdef = new FuncdefNode();
             Node *node_type = new TypeNode();
             parseType(node_type);
             node_funcdef->addChild(node_type);
@@ -502,6 +494,7 @@ public:
             if (match(Tokenizer::T_ENDDEF)) {
                 // with no body; just declaration
                 _tokenizer->nextToken();
+                node->addChild(node_funcdef);
             } else if (match(Tokenizer::T_COLON)) {
                 // with body;
                 _tokenizer->nextToken();

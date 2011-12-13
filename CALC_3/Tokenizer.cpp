@@ -188,7 +188,7 @@ Tokenizer::ValueType Tokenizer::nextToken() {
         } else if (symbol == ']') {
             token = symbol;
             _type = T_CLOSING_SBRACKET;
-        } else if (symbol = '{') {
+        } else if (symbol == '{') {
             token = symbol;
             _type = T_OPENING_CBRACKET;
         } else if (symbol == '}') {
