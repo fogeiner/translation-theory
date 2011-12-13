@@ -1,7 +1,7 @@
 #include "Parser.h"
 #include <cstdio>
 
-std::string buildXMLTree(Node *root, int level = 0) {
+std::string buildXMLTree(Node *root, int level) {
 
     std::string xml;
     std::string indent;
@@ -30,7 +30,7 @@ std::string buildXMLTree(Node *root, int level = 0) {
 }
 
 
-int main() {
+int main2() {
     Node *pn = new ProgramNode();
     pn->addChild(new IdNode("abc"));
     ::printf("%s", buildXMLTree(pn).c_str());

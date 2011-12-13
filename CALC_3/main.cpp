@@ -19,7 +19,7 @@ using std::istream;
 using std::string;
 using std::exception;
 
-int main2(int argc, char** argv) {
+int main(int argc, char** argv) {
     Logger::setLevel(Logger::DEBUG);
 
     if (argc <= 1) {
@@ -36,9 +36,10 @@ int main2(int argc, char** argv) {
         }
 
         Tokenizer *tokenizer = new Tokenizer(*ls);
-        Parser *parser = new Parser(tokenizer);
+//        Parser *parser = new Parser(tokenizer);
+//        cout << parser->getXMLTree() << endl;
 
-//#define TOKENIZER_TEST
+#define TOKENIZER_TEST
 #ifdef TOKENIZER_TEST
         for (tokenizer->nextToken();
                 tokenizer->getToken() != Tokenizer::T_EOF;
@@ -50,7 +51,8 @@ int main2(int argc, char** argv) {
         }
 #endif
 
-        delete parser;
+
+//        delete parser;
         delete tokenizer;
     } catch (BufferedStreamException &ex) {
         ERROR(ex.what());

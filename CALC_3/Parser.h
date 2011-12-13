@@ -8,6 +8,9 @@
 #include "Tokenizer.h"
 #include "Logger.h"
 
+class Node;
+std::string buildXMLTree(Node *root, int level = 0);
+
 class ParserException : public std::exception {
 private:
     std::string _msg;
@@ -442,6 +445,10 @@ private:
     }
 
 public:
+    std::string getXMLTree() {
+        return buildXMLTree(_root);
+    }
+
     Parser(Tokenizer *tokenizer):
         _tokenizer(tokenizer) {
             TRACE;
@@ -450,7 +457,7 @@ public:
             _tokenizer->nextToken();
             parseProgram(&_root);
 
-            if (_tokenizer->getToken() != Tokenizer::T_EOF) {
+            if (!match(Tokenizer::T_EOF)) {
                 throw PARSER_EXPECTED(Tokenizer::T_EOF);
             }
     }
@@ -473,8 +480,14 @@ public:
     void parseFuncdef(Node *node) {
         TRACE;
         if (match(Tokenizer::T_DEF)) {
-            Node *node_funcdef = new FuncdefNode(_tokenizer->getTag());
             _tokenizer->nextToken();
+
+            Node *node_funcdef = NULL;
+            if (match(Tokenizer::T_ID)) {
+                node_funcdef = new FuncdefNode(_tokenizer->getTag());
+            } else {
+                throw PARSER_EXPECTED(Tokenizer::T_ID);
+            }
 
             Node *node_type = new TypeNode();
             parseType(node_type);
@@ -1074,5 +1087,7 @@ public:
     }
 
 };
+
+
 
 #endif

@@ -337,6 +337,9 @@ Tokenizer::ValueType Tokenizer::nextToken() {
         }
 
         _tag = token;
+
+DEBUG(fmt("Read %s %s", _tag.c_str(), getTokenDescription(_type).c_str()));
+
         return _type;
     }
 }
