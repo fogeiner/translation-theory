@@ -38,8 +38,8 @@ public:
         T_SEMICOLON, // ;
         T_OPENING_RBRACKET, // (
         T_CLOSING_RBRACKET, // )
-        //T_OPENING_CBRACKET, // {
-        //T_CLOSING_CBRACKET, // }
+        T_OPENING_CBRACKET, // {
+        T_CLOSING_CBRACKET, // }
         T_EOF, // getc == EOF
         T_TYPE_INT, // int
         T_TYPE_FLOAT, // float
@@ -56,8 +56,8 @@ public:
         //T_SHIFT_RIGHT, // >>
         T_EQUAL, // ==
         T_NOT_EQUAL, // !=
-        //T_OPENING_SBRACKET, // [
-        //T_CLOSING_SBRACKET, // ]
+        T_OPENING_SBRACKET, // [
+        T_CLOSING_SBRACKET, // ]
         T_AND, // and 
         T_OR, // or 
         T_NOT, // not OR !

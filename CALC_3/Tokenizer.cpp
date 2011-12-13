@@ -40,8 +40,8 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_SEMICOLON, "Semicolon")
 (T_OPENING_RBRACKET, "Opening round bracket")
 (T_CLOSING_RBRACKET, "Closing round bracket")
-//(T_OPENING_CBRACKET, "Opening curly bracket")
-//(T_CLOSING_CBRACKET, "Closing curly bracket")
+(T_OPENING_CBRACKET, "Opening curly bracket")
+(T_CLOSING_CBRACKET, "Closing curly bracket")
 (T_EOF, "End Of File")
 (T_TYPE_INT, "Integer type")
 (T_TYPE_FLOAT, "Float type")
@@ -58,8 +58,8 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 //(T_SHIFT_RIGHT, "Shift right")
 (T_EQUAL, "Equal")
 (T_NOT_EQUAL, "Not equal")
-// (T_OPENING_SBRACKET, "Opening square bracket")
-// (T_CLOSING_SBRACKET, "Closing square bracket")
+(T_OPENING_SBRACKET, "Opening square bracket")
+(T_CLOSING_SBRACKET, "Closing square bracket")
 (T_AND, "And")
 (T_OR, "Or")
 (T_NOT, "Not")
@@ -182,7 +182,19 @@ Tokenizer::ValueType Tokenizer::nextToken() {
         } else if (symbol == ')') {
             token = symbol;
             _type = T_CLOSING_RBRACKET;
-        } else if (symbol == ',') {
+        } else if (symbol == '[') {
+			token = symbol
+			_type = T_OPENING_SBRACKET;
+		} else if (symbol == ']') {
+			token = symbol;
+			_type = T_CLOSING_SBRACKET;
+		} else if (symbol = '{') {
+			token = symbol;
+			_type = T_OPENING_CBRACKET;
+		} else if (symbol == '}') {
+			token = symbol;
+			_type = T_CLOSING_CBRACKET;
+		} else if (symbol == ',') {
             token = symbol;
             _type = T_COMMA;
         } else if (symbol == '<') {

@@ -516,10 +516,65 @@ public:
         }
     }
 
-    void parseBexpression(Node *node) {
-        TRACE;
-    }
+	bool isBatomStart() {
+		bool result = false	
+			|| isAtomStart()
+			|| match(Tokenizer::T_NOT)
+			|| match(Tokenizer::T_OPENING_SBRACKET)
+			|| match(Tokenizer::T_TRUE)
+			|| match(Tokenizer::T_FALSE);
+			
+		return result;
+	}
+	
+	bool isAtomStart() {
+		bool result = false
+			|| match(Tokenizer::T_ID)
+			|| match(Tokenizer::T_INTEGER)
+			|| match(Tokenizer::T_FLOAT)
+			|| match(Tokenizer::T_OPENING_RBRACKET)
+			|| match(Tokenizer::T_PLUS)
+			|| match(Tokenizer::T_MINUS)
+			|| match(Tokenizer::T_OPENING_CBRACKET);
+			
+		return result;
+	}
 
+	void parseFuncall(Node *node) {
+		TRACE;
+	}
+	
+	void parseFuncargs(Node *node) {
+		TRACE;
+	}
+	
+	void parseFuncargsrest(Node *node) {
+		TRACE;
+	}
+
+	void parseBexpression(Node *node) {
+		TRACE;
+	}
+	
+	void parsebconj(Node *node) {
+		TRACE;
+	}
+	
+	void parseBconj(Node *node) {
+		TRACE;
+	}
+	
+	void parsebdisj(Node *node) {
+		TRACE;
+	}
+	
+	void parseBdisj(Node *node) {
+		TRACE;
+	}
+	
+	void parseBatom(Node *node) {
+		TRACE;
+	}
 
     void parseExpression(Node *node) {
         TRACE;
