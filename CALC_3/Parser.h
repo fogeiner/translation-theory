@@ -645,6 +645,7 @@ public:
             parseId(node_declaration);
             node->addChild(node_declaration);
         } else if (match(Tokenizer::T_TYPE_FLOAT)) {
+            _tokenizer->nextToken();
             Node *node_declaration = new DeclarationNode();
             Node *node_type = new TypeNode();
             node_type->addChild(new TypeFloatNode());
@@ -978,7 +979,7 @@ public:
             _tokenizer->nextToken();
 
             node_cmp->addChild((*node_cmp_aux)[0]);
-            // we don't want children to die
+            // we don't want children to die :) (~Node() deletes children)
             node_cmp_aux->clear();
             delete node_cmp_aux;
             parseExpression(node_cmp);
