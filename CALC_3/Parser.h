@@ -78,6 +78,10 @@ public:
         return _children[index];
     }
 
+    void clear() {
+        _children.clear();
+    }
+
     virtual ~Node() {
         for (Node::node_iterator it = this->begin();
                 it != this->end(); ++it) {
@@ -205,6 +209,13 @@ class AssignmentNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
         return "assignment";
+    }
+};
+
+class DeclarationNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "declaration";
     }
 };
 
@@ -573,20 +584,52 @@ public:
 
         if (match(Tokenizer::T_WHILE)) {
             parseWhile(node);
+            parseStatements(node);
         } else if (match(Tokenizer::T_IF)) {
             parseIf(node);
+            parseStatements(node);
         } else if (match(Tokenizer::T_ID)) {
             parseAssignment(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         } else if (match(Tokenizer::T_TYPE_INT)) {
             parseDeclaration(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         } else if (match(Tokenizer::T_TYPE_FLOAT)) {
             parseDeclaration(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         } else if (match(Tokenizer::T_RETURN)) {
             parseReturn(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         } else if (match(Tokenizer::T_PRINT)) {
             parsePrint(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         } else if (match(Tokenizer::T_READ)) {
             parseRead(node);
+            if (!match(Tokenizer::T_SEMICOLON)) {
+                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+            }
+            _tokenizer->nextToken();
+            parseStatements(node);
         }
         // eps
     }
@@ -595,18 +638,19 @@ public:
         TRACE;
         if (match(Tokenizer::T_TYPE_INT)) {
             _tokenizer->nextToken();
-
+            Node *node_declaration = new DeclarationNode();
             Node *node_type = new TypeNode();
             node_type->addChild(new TypeIntNode());
-            parseId(node_type);
-            node->addChild(node_type);
+            node_declaration->addChild(node_type);
+            parseId(node_declaration);
+            node->addChild(node_declaration);
         } else if (match(Tokenizer::T_TYPE_FLOAT)) {
-            _tokenizer->nextToken();
-
+            Node *node_declaration = new DeclarationNode();
             Node *node_type = new TypeNode();
             node_type->addChild(new TypeFloatNode());
-            parseId(node_type);
-            node->addChild(node_type);
+            node_declaration->addChild(node_type);
+            parseId(node_declaration);
+            node->addChild(node_declaration);
         } else {
             throw PARSER_ILLEGAL;
         }
@@ -656,6 +700,7 @@ public:
             if (!match(Tokenizer::T_ASSIGNMENT)) {
                 throw PARSER_EXPECTED(Tokenizer::T_ASSIGNMENT);
             }
+            _tokenizer->nextToken();
             parseExpression(node_assignment);
             node->addChild(node_assignment);
         } else {
@@ -678,11 +723,14 @@ public:
             _tokenizer->nextToken();
 
             // parseStatements
-            parseStatements(node_while);
+            Node *node_statements = new StatementsNode();
+            parseStatements(node_statements);
+            node_while->addChild(node_statements);
             // match done
             if (!match(Tokenizer::T_DONE)) {
                 throw PARSER_EXPECTED(Tokenizer::T_DONE);
             }
+            _tokenizer->nextToken();
 
             node->addChild(node_while);
         } else {
@@ -704,20 +752,27 @@ public:
             }
             _tokenizer->nextToken();
 
+            Node *node_then_statements = new StatementsNode();
             // parseStatements
-            parseStatements(node_if);
+            parseStatements(node_then_statements);
+            node_if->addChild(node_then_statements);
 
+            Node *node_else_statements = new StatementsNode();
             if (match(Tokenizer::T_ELSE)) {
                 // else if T_ELSE -> parseStatements, match T_FI
                 _tokenizer->nextToken();
-                parseStatements(node_if);
+                parseStatements(node_else_statements);
 
                 if (!match(Tokenizer::T_FI)) {
                     throw PARSER_EXPECTED(Tokenizer::T_FI);
                 }
+                _tokenizer->nextToken();
+
+                node_if->addChild(node_else_statements);
             } else if (match(Tokenizer::T_FI)) {
                 // if T_FI -> return
                 _tokenizer->nextToken();
+                node_if->addChild(node_else_statements);
             } else {
                 // else throw ILLEGAL
                 throw PARSER_ILLEGAL;
@@ -920,7 +975,11 @@ public:
             } else {
                 throw PARSER_ILLEGAL;
             }
+            _tokenizer->nextToken();
+
             node_cmp->addChild((*node_cmp_aux)[0]);
+            // we don't want children to die
+            node_cmp_aux->clear();
             delete node_cmp_aux;
             parseExpression(node_cmp);
             node->addChild(node_cmp);

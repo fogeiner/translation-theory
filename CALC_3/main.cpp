@@ -55,11 +55,14 @@ int main(int argc, char** argv) {
         delete parser;
         delete tokenizer;
     } catch (BufferedStreamException &ex) {
-        ERROR(ex.what());
+        delete ls;
+        CRITICAL(ex.what());
     } catch (ParserException &ex) {
-        ERROR(ex.what());
+        delete ls;
+        CRITICAL(ex.what());
     } catch (exception &ex) {
-        ERROR(ex.what());
+        delete ls;
+        CRITICAL(ex.what());
     }
 
     delete ls;
