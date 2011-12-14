@@ -240,6 +240,13 @@ private:
     }
 };
 
+class FuncallargNode: public Node {
+private:
+    std::string _getDefaultXMLTag() const {
+        return "funcallarg";
+    }
+};
+
 class BexpressionNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
@@ -820,6 +827,7 @@ public:
             if (!match(Tokenizer::T_CLOSING_CBRACKET)) {
                 throw PARSER_EXPECTED(Tokenizer::T_CLOSING_CBRACKET);
             }
+            _tokenizer->nextToken();
             node->addChild(node_funcall);
         } else {
             throw PARSER_EXPECTED(Tokenizer::T_OPENING_CBRACKET);
@@ -830,9 +838,9 @@ public:
         TRACE;
 
         if (isAtomStart()) {
-            Node *node_expression = new ExpressionNode();
-            parseExpression(node_expression);
-            node->addChild(node_expression);
+            Node *node_funcallarg = new FuncallargNode();
+            parseExpression(node_funcallarg);
+            node->addChild(node_funcallarg);
             parseFuncallargsrest(node);
         }
         // eps
