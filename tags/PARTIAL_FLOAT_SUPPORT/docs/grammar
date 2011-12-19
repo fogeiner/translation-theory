@@ -1,0 +1,76 @@
+<type> ::= int | float
+<id> ::= 
+<number> ::= 
+
+<program> ::= <funcdefs>
+
+<funcdefs> ::= <funcdef> <funcdefs> | eps
+<funcdef> ::= def <type> <id> <funargs> : <statements> enddef
+<funargs> ::= <type> <id> | , <type> <id> <funargs> | eps
+
+<statements> ::= <statement> <statements> | eps
+<statement> ::= <while> | <if> | <expression>; | <declaration>; | <assignment>; | <return>; | <print>; | <read>; 
+
+<print> ::= print <id>
+<read> ::= read <id>
+
+<funcall> ::= <id> <funcallargs>
+<funcallargs> ::= <expression> | <expression>, <funcallargs> | eps
+
+<return> ::= return <expression>
+<while> ::= while <condition> do <statements> done
+<if> ::= if <bexpression> then <statements> fi | if <bexpression> then <statements> else <statements> <fi>
+
+<bexpression> ::= <bfactor> <Bfactor> | <bfactor>
+<Bfactor> ::= {and or} <bfactor> <Bfactor> | {and or} <bfactor>
+<bfactor> ::= <expression> {< > <= >= == !=} <expression> | not <bfactor> | (bexpression) | true | false 
+
+<expression> ::= <term> <Term> | <term>
+<Term> ::= ± <term> <Term> | ± <term>  
+<term> ::= <mult> <Mult> | <mult>
+<Mult> ::= *%/ <atom> <Mult> | *%/ <atom>
+<mult> ::= <atom> <Mult> | <atom>
+<atom> ::= <id> | <number> | (<expression>) | ±<atom> | <funcall>
+
+<declaration> ::= <type> <id> <declaration2> | <type> <id> = <expression> <declaration2>
+<declaration2> ::= ,  <type> <id> | , <type> <id> = <expression> | eps
+<assignment> ::= <id> = <expression>
+
+code sample
+
+def float getF  
+float a, float b:
+float c;
+c = a + b;
+return c;
+enddef
+
+def int main:
+int i = 0;
+int j =0;
+float n = getF i j;
+float m = 0.0;
+
+while i < 10 do
+m = m + n/i;
+done
+
+if m < 5 then
+print(m);
+if i < 5 then
+print i;
+fi
+else
+print n;
+fi
+	
+
+i = 0;
+j = 0;
+while i < 10 do
+while j < 10 do
+print i * j;
+done
+done
+enddef
+
