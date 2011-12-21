@@ -5,7 +5,12 @@ APP=./main
 SUCCESS=0
 FAIL=0
 
-make clean && make
+make
+
+if [ "X$?" != "X0" ] ; then
+	echo "Compilation failed!"
+	exit 1;
+fi
 
 if [ ! -x ${APP} ] ; then
 	echo "${APP} not found";

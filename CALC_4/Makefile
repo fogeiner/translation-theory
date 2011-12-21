@@ -4,7 +4,7 @@ CC=g++
 CPPFLAGS+= -g
 main: main.o BufferedStream.o Logger.o LocatableStream.o Tokenizer.o Parser.o
 
-main.o: main.cpp
+main.o: main.cpp Parser.h
 
 BufferedStream.o: BufferedStream.cpp BufferedStream.h
 
