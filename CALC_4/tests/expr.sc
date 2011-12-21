@@ -4,7 +4,7 @@ def int main:
 #	a = 1 + 2 + 3;
 #	b = 2 + 3 - 4*2;
 	a = 1 - 2 + 3;
-	b = -(1 - (2 + 3)/2);
+	b = -(1 - (2 + 3)/2) % a;
 	print +a;
-	print b;
+	print -b;
 enddef

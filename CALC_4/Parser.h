@@ -94,12 +94,12 @@ class Function {
 			return _offsets[id];
 		}
 
-		std::string getType() {
+		std::string getType() const {
 			TRACE;
 			return _type;
 		}
 
-		std::string getName() {
+		std::string getName() const {
 			TRACE;
 			return _name;
 		}
@@ -127,6 +127,10 @@ class Function {
 			int otherParametersCount = other->getInputParametersCount();
 			DEBUG(fmt("%d vs %d", parametersCount, otherParametersCount));
 			return parametersCount == otherParametersCount;
+		}
+
+		std::string getEndLabel() const {
+			return fmt(".%send", _name.c_str());
 		}
 };
 
@@ -429,10 +433,11 @@ class FuncdefNode: public Node {
 
 				code += fmt(
 						"# epilogue\n"
+						"%s:\n"
 						"    movl %%ebp, %%esp\n"
 						"    popl %%ebp\n"
-						"    ret\n"
-						);
+						"    ret\n",
+						context->getEndLabel().c_str());
 				return code;
 			} else {
 				// declaration produces no code but saves meta-information
@@ -473,12 +478,6 @@ class ProgramNode: public Node {
 };
 
 
-class ReturnNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "return";
-		}
-};
 
 class ReadNode: public Node {
 	private:
@@ -621,6 +620,39 @@ class ExpressionNode: public Node {
 				// PlusTermNode or MinusTermNode
 				code += get(1)->generate(context);
 			} 
+
+			return code;
+		}
+};
+
+class ReturnNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "return";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1);
+			ASSERT_TYPE(ExpressionNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# return\n"
+					);
+			code += get(0)->generate(context);
+			// the result of the expression on the top of the stack
+			// no need to move anything
+
+			code += fmt(
+					"    popl %%eax\n"
+					"    jmp %s\n"
+					"    push $.PRINTFORMAT\n"
+					"    call printf\n"
+					"    subl $8, %%esp\n",
+					context->getEndLabel().c_str());
 
 			return code;
 		}
