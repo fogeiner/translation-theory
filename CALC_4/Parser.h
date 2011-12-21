@@ -661,6 +661,27 @@ class NegationNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "negation";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1));
+			ASSERT_TYPE(AtomNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# negation\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%eax\n"
+					"    imull $-1, %%eax\n"
+					"    pushl %%eax\n"
+					);
+
+			return code;
+		}
 };
 
 class PlusTermNode: public Node {
