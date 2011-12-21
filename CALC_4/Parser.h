@@ -161,6 +161,7 @@ class Program {
 				_declarationMask[id] = true;
 			}
 		}
+
 		static void addFunction(std::string id, Function *function) {
 			TRACE;
 			// if the function is already declared -- ok;
@@ -190,6 +191,7 @@ class Program {
 
 		static Function *getFunction(std::string id) {
 			TRACE;
+
 			if (_functions.find(id) != _functions.end()) {
 				return _functions[id];
 			} else {
@@ -294,7 +296,7 @@ class Node {
 		}
 
 		virtual std::string generate(Function *context) {
-			return "";
+			return _getDefaultXMLTag() + ": ---NOT IMPLEMENTED---\n";
 		}
 };
 
@@ -346,7 +348,7 @@ class StatementsNode: public Node {
 			std::string code;
 			assert(context != NULL);
 			for (int i = 0; i < childrenCount(); ++i) {
-					code += get(i)->generate(context);
+				code += get(i)->generate(context);
 			}
 			return code;
 		}
@@ -420,8 +422,8 @@ class ProgramNode: public Node {
 			TRACE;
 
 			assert(context == NULL);
-			std::string code;
 
+			std::string code;
 			code += ".READFORMAT:\n";
 			code += "    .string \"%d\\n\"\n";
 			code += ".PRINTFORMAT:\n";
@@ -449,6 +451,14 @@ class ReadNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "read";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+
+			std::string code;
 		}
 };
 
