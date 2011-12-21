@@ -29,7 +29,7 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
         (T_UNDEFINED, "Undefined symbol")
 (T_ID, "ID")
 (T_INTEGER, "Integer")
-(T_FLOAT, "Float")
+//(T_FLOAT, "Float")
 (T_PLUS, "Plus")
 (T_MINUS, "Minus")
 (T_MULT, "Multiplication")
@@ -44,7 +44,7 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 (T_CLOSING_CBRACKET, "Closing curly bracket")
 (T_EOF, "End Of File")
 (T_TYPE_INT, "Integer type")
-(T_TYPE_FLOAT, "Float type")
+//(T_TYPE_FLOAT, "Float type")
 (T_READ, "Read operation")
 (T_PRINT, "Print operation")
 (T_WHILE, "While")
@@ -257,30 +257,18 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 token = symbol;
                 _type = T_DIV;
             }
-        } else if (isdigit(symbol) || symbol == '.') {
+        } else if (isdigit(symbol)) {
             token = symbol;
-            int dots = (symbol == '.') ? 1 : 0;
             symbol = _stream.get();
-            while ((isdigit(symbol) || symbol == '.') && !_stream.eof()) {
+            while (isdigit(symbol) && !_stream.eof()) {
                 token += symbol;
-                if (symbol == '.') {
-                    dots++;
-                }
                 symbol = _stream.get();
             }
 
-            if (dots == 0) {
-                _type = T_INTEGER;
-            } else if (dots == 1) {
-                if (token.length() != 1) {
-                    _type = T_FLOAT;
-                }
-            } else {
-                _type = T_UNDEFINED;
-            }
+            // check to forbid things like 100abc should be here
 
+            _type = T_INTEGER;
             _stream.unget();
-
         } else if (isalpha(symbol) || symbol == '_') {
             token += symbol;
             symbol = _stream.get();
@@ -292,8 +280,6 @@ Tokenizer::ValueType Tokenizer::nextToken() {
 
             if (token == "int") {
                 _type = T_TYPE_INT;
-            } else if (token == "float") {
-                _type = T_TYPE_FLOAT;
             } else if (token == "read") {
                 _type = T_READ;
             } else if (token == "print") {

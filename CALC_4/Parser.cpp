@@ -15,7 +15,7 @@ std::string buildXMLTree(Node *root, int level) {
     xml += "\n";
 
     for(int i = 0; i < root->childrenCount(); ++i) {
-        xml += buildXMLTree((*root)[i], level + 1);
+        xml += buildXMLTree(root->get(i), level + 1);
     }
 
     std::string end = root->XMLEnd();
@@ -28,6 +28,9 @@ std::string buildXMLTree(Node *root, int level) {
 
     return xml;
 }
+
+std::map<std::string, Function *> Program::_functions;
+std::map<std::string, bool> Program::_declarationMask;
 
 
 int main2() {

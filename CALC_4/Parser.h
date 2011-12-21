@@ -8,8 +8,13 @@
 #include "Tokenizer.h"
 #include "Logger.h"
 
-class Node;
-std::string buildXMLTree(Node *root, int level = 0);
+#include <map>
+#include <list>
+#include <algorithm>
+
+#include <iostream>
+
+#define ASSERT_TYPE(X,Y) assert(dynamic_cast<X>(Y) != NULL)
 
 class ParserException : public std::exception {
 private:
@@ -26,6 +31,180 @@ public:
         return _msg.c_str();
     }
 };
+
+
+
+class Function {
+private:
+    std::string _type;
+    std::string _name;
+    std::map<std::string, std::string> _types;
+    std::map<std::string, int> _offsets;
+
+    int _max_parameters_offset;
+    int _max_local_variable_offset;
+
+    bool isVariableUnique(std::string id) {
+        TRACE;
+        return (_offsets.find(id) == _offsets.end());
+    }
+public:
+    Function(std::string type, std::string name):
+    _type(type),
+    _name(name),
+    // 4 bytes for return address
+    // 4 bytes for the saved ebp
+    _max_parameters_offset(8),
+    _max_local_variable_offset(0)
+    {TRACE;}
+
+    void addParameter(std::string type, std::string id) {
+        TRACE;
+        if (!isVariableUnique(id)) {
+            throw ParserException(fmt("Variable is already defined: %s", id.c_str()));
+        }
+        _types.insert(std::make_pair<std::string, std::string> (id, type));
+        // set offset!
+        _offsets.insert(std::make_pair<std::string, int>(id, _max_parameters_offset));
+        _max_parameters_offset += 4;
+    }
+
+    void addLocalVariable(std::string type, std::string id) {
+        TRACE;
+
+        if (!isVariableUnique(id)) {
+            throw ParserException(fmt("Variable is already defined: %s", id.c_str()));
+        }
+        _types.insert(std::make_pair<std::string, std::string> (id, type));
+        // set offset!
+        _offsets.insert(std::make_pair<std::string, int>(id, _max_local_variable_offset));
+        _max_local_variable_offset += 4;
+    }
+
+    int getVariableOffset(std::string id) {
+        TRACE;
+
+        assert(_types.find(id) != _types.end());
+        assert(_offsets.find(id) != _offsets.end());
+
+        return _offsets[id];
+    }
+
+    std::string getType() {
+        TRACE;
+        return _type;
+    }
+
+    std::string getName() {
+        TRACE;
+        return _name;
+    }
+
+    int getInputParametersCount() {
+        TRACE;
+
+        int count = 0;
+        for (std::map<std::string, int>::iterator it = _offsets.begin();
+            it != _offsets.end(); ++it) {
+                std::string id = it->first;
+                int offset = it->second;
+                if (offset > 0) {
+                    count = count + 1;
+                }
+        }
+        return count;
+    }
+
+    bool isEqualInterface(Function *other) {
+        TRACE;
+        // for now it's enough that there are the
+        // same amount of parameters passed in
+        int parametersCount = getInputParametersCount();
+        int otherParametersCount = other->getInputParametersCount();
+        DEBUG(fmt("%d %d", parametersCount, otherParametersCount));
+        return parametersCount == otherParametersCount;
+    }
+};
+
+/**
+ * Static program class saves all the declared functions (as well as declarations)
+ * Functions should be allocated on the heap and memory should not be deleted from outside
+ * I.e. this class is very tightly coupled with the Function class.
+ * WARNING: after adding function or declaration getFunction!
+ */
+class Program {
+private:
+    static std::map<std::string, Function *> _functions;
+    // true if the function is declaration; false otherwise
+    static std::map<std::string, bool> _declarationMask;
+public:
+    static void addDeclaration(std::string id, Function *function) {
+        TRACE;
+        if (_declarationMask.find(id) != _declarationMask.end()) {
+
+            Function *saved = _functions[id];
+            if (saved->isEqualInterface(function) == false) {
+                throw ParserException(fmt("Function %s is already declared with the other interface", id.c_str()));
+            }
+
+            bool savedDeclaration = _declarationMask[id];
+
+            // declaration should not replace function
+            if (savedDeclaration == true) {
+                delete saved;
+                _functions[id] = function;
+                _declarationMask[id] = true;
+            } else {
+                delete function;
+            }
+
+        } else {
+            _functions[id] = function;
+            _declarationMask[id] = true;
+        }
+    }
+    static void addFunction(std::string id, Function *function) {
+        TRACE;
+        // if the function is already declared -- ok;
+        // should check that the amount of arguments is the same
+        // and that their types are equal
+        if (_declarationMask.find(id) != _declarationMask.end()) {
+            Function *saved = _functions[id];
+
+            if (saved->isEqualInterface(function) == false) {
+                throw ParserException(fmt("Function %s is already declared with the other interface", id.c_str()));
+            }
+            bool savedDeclaration = _declarationMask[id];
+            if (savedDeclaration) {
+                // replace declaration with the real function
+                delete saved;
+                _functions[id] = function;
+                _declarationMask[id] = false;
+            } else {
+                // can have function defined multiple times
+                throw ParserException(fmt("Function %s is already defined", id.c_str()));
+            }
+        } else {
+            _functions[id] = function;
+            _declarationMask[id] = false;
+        }
+    }
+
+    static Function *getFunction(std::string id) {
+        TRACE;
+        if (_functions.find(id) != _functions.end()) {
+            return _functions[id];
+        } else {
+            return NULL;
+        }
+    }
+};
+
+
+
+class Node;
+std::string buildXMLTree(Node *root, int level = 0);
+
 
 #define PARSER_EXPECTED(expected) \
             ParserException(\
@@ -74,7 +253,7 @@ public:
         return _children.size();
     }
 
-    Node *operator[](int index) const {
+    Node *get(int index) const {
         return _children[index];
     }
 
@@ -103,6 +282,7 @@ public:
 
         return xml;
     }
+
     virtual std::string XMLEnd() const {
         std::string XMLTag = _getDefaultXMLTag(),
                     tag = getTag(),
@@ -116,35 +296,22 @@ public:
 
         return xml;
     }
-};
 
-class ProgramNode: public Node {
-private:
-        virtual std::string _getDefaultXMLTag() const {
-            return "program";
-        }
-};
-
-class FuncdefNode: public Node {
-private:
-    virtual std::string _getDefaultXMLTag() const {
-        return "funcdef";
+    virtual std::string generate(Function *context) {
+        return "";
     }
 };
 
-class TypeIntNode: public Node {
+
+class TypeNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
-        return "type_int";
+        return "type";
     }
+public:
+    TypeNode(std::string tag): Node(tag) {}
 };
 
-class TypeFloatNode: public Node {
-private:
-    virtual std::string _getDefaultXMLTag() const {
-        return "type_float";
-    }
-};
 
 class IdNode: public Node {
 private:
@@ -154,13 +321,6 @@ private:
 public:
     IdNode(std::string id):
     Node(id) {}
-};
-
-class TypeNode: public Node {
-private:
-    virtual std::string _getDefaultXMLTag() const {
-        return "type";
-    }
 };
 
 class FuncargsNode: public Node {
@@ -177,12 +337,94 @@ private:
     }
 };
 
+
 class StatementsNode: public Node {
 private:
     virtual std::string _getDefaultXMLTag() const {
         return "statements";
     }
 };
+
+class FuncdefNode: public Node {
+private:
+    virtual std::string _getDefaultXMLTag() const {
+        return "funcdef";
+    }
+
+public:
+    virtual std::string generate(Function *context_outer) {
+        TRACE;
+
+        assert(context_outer == NULL);
+        // 0 type_int -- return type (by now int only)
+        ASSERT_TYPE(TypeNode*, get(0));
+        std::string type = get(0)->getTag();
+        assert("int" == type);
+        // 1 id
+        ASSERT_TYPE(IdNode*, get(1));
+        std::string id = get(1)->getTag();
+
+        Function *context = new Function(type, id);
+
+        // 2 funcargs -> funcarg*
+        ASSERT_TYPE(FuncargsNode*, get(2));
+        for(int i = 0; i < get(2)->childrenCount(); ++i) {
+            Node *child = get(2)->get(i);
+            ASSERT_TYPE(FuncargNode*, child);
+            ASSERT_TYPE(TypeNode*, child->get(0));
+            ASSERT_TYPE(IdNode*, child->get(1));
+            std::string type = child->get(0)->getTag();
+            assert("int" == type);
+            std::string id = child->get(1)->getTag();
+
+            context->addParameter(type, id);
+        }
+
+        // 3 statements or none if it was a function declaration
+        if (childrenCount() == 4) {
+            ASSERT_TYPE(StatementsNode*, get(3));
+            Program::addFunction(id, context);
+
+            std::string code;
+            code += fmt(".globl %s\n", id.c_str());
+            code += fmt("%s:\n", id.c_str());
+            code += fmt("pushl %%ebp\nmovl %%esp, %%ebp\n");
+
+            code += get(3)->generate(context);
+
+            code += fmt("popl %%ebp\n");
+            code += fmt("ret\n");
+            return code;
+        } else {
+            // declaration produces no code but saves meta-information
+            Program::addDeclaration(id, context);
+            return "";
+        }
+    }
+};
+
+class ProgramNode: public Node {
+private:
+        virtual std::string _getDefaultXMLTag() const {
+            return "program";
+        }
+
+        virtual std::string generate(Function *context) {
+            TRACE;
+
+            assert(context == NULL);
+            std::string code;
+
+            for(node_iterator it = this->begin();
+                it != this->end(); ++it) {
+                    Node *child = *it;
+                    ASSERT_TYPE(FuncdefNode*, child);
+                    code += child->generate(NULL);
+            }
+            return code;
+        }
+};
+
 
 class ReturnNode: public Node {
 private:
@@ -438,15 +680,6 @@ private:
     }
 };
 
-class FloatNode: public Node {
-public:
-    FloatNode(std::string flt): Node(flt) {}
-private:
-    virtual std::string _getDefaultXMLTag() const {
-        return "float";
-    }
-};
-
 class Parser {
 private:
     Tokenizer *_tokenizer;
@@ -462,7 +695,11 @@ private:
 
 public:
     std::string getXMLTree() {
-        return buildXMLTree(_root);
+        return ::buildXMLTree(_root);
+    }
+
+    std::string generate() {
+        return _root->generate(NULL);
     }
 
     Parser(Tokenizer *tokenizer):
@@ -499,10 +736,7 @@ public:
             _tokenizer->nextToken();
 
             Node *node_funcdef = new FuncdefNode();
-            Node *node_type = new TypeNode();
-            parseType(node_type);
-            node_funcdef->addChild(node_type);
-
+            parseType(node_funcdef);
             parseId(node_funcdef);
 
             Node *node_funcargs = new FuncargsNode();
@@ -538,10 +772,7 @@ public:
     void parseType(Node *node) {
         TRACE;
         if (match(Tokenizer::T_TYPE_INT)) {
-            node->addChild(new TypeIntNode());
-            _tokenizer->nextToken();
-        } else if (match(Tokenizer::T_TYPE_FLOAT)) {
-            node->addChild(new TypeFloatNode());
+            node->addChild(new TypeNode("int"));
             _tokenizer->nextToken();
         } else {
             throw PARSER_ILLEGAL;
@@ -561,8 +792,7 @@ public:
     void parseFunargs(Node *node) {
         TRACE;
 
-        if (match(Tokenizer::T_TYPE_INT)
-            || match(Tokenizer::T_TYPE_FLOAT)) {
+        if (match(Tokenizer::T_TYPE_INT)) {
             Node *node_funcarg = new FuncargNode();
             parseType(node_funcarg);
             parseId(node_funcarg);
@@ -609,13 +839,6 @@ public:
             }
             _tokenizer->nextToken();
             parseStatements(node);
-        } else if (match(Tokenizer::T_TYPE_FLOAT)) {
-            parseDeclaration(node);
-            if (!match(Tokenizer::T_SEMICOLON)) {
-                throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
-            }
-            _tokenizer->nextToken();
-            parseStatements(node);
         } else if (match(Tokenizer::T_RETURN)) {
             parseReturn(node);
             if (!match(Tokenizer::T_SEMICOLON)) {
@@ -644,19 +867,8 @@ public:
     void parseDeclaration(Node *node) {
         TRACE;
         if (match(Tokenizer::T_TYPE_INT)) {
-            _tokenizer->nextToken();
             Node *node_declaration = new DeclarationNode();
-            Node *node_type = new TypeNode();
-            node_type->addChild(new TypeIntNode());
-            node_declaration->addChild(node_type);
-            parseId(node_declaration);
-            node->addChild(node_declaration);
-        } else if (match(Tokenizer::T_TYPE_FLOAT)) {
-            _tokenizer->nextToken();
-            Node *node_declaration = new DeclarationNode();
-            Node *node_type = new TypeNode();
-            node_type->addChild(new TypeFloatNode());
-            node_declaration->addChild(node_type);
+            parseType(node_declaration);
             parseId(node_declaration);
             node->addChild(node_declaration);
         } else {
@@ -807,7 +1019,6 @@ public:
         bool result = false
             || match(Tokenizer::T_ID)
             || match(Tokenizer::T_INTEGER)
-            || match(Tokenizer::T_FLOAT)
             || match(Tokenizer::T_OPENING_RBRACKET)
             || match(Tokenizer::T_PLUS)
             || match(Tokenizer::T_MINUS)
@@ -986,7 +1197,7 @@ public:
             }
             _tokenizer->nextToken();
 
-            node_cmp->addChild((*node_cmp_aux)[0]);
+            node_cmp->addChild(node_cmp_aux->get(0));
             // we don't want children to die :) (~Node() deletes children)
             node_cmp_aux->clear();
             delete node_cmp_aux;
@@ -1116,11 +1327,7 @@ public:
                 Node *node_integer = new IntegerNode(_tokenizer->getTag());
                 _tokenizer->nextToken();
                 node_atom->addChild(node_integer);
-            } else if (match(Tokenizer::T_FLOAT)) {
-                Node *node_float = new FloatNode(_tokenizer->getTag());
-                _tokenizer->nextToken();
-                node_atom->addChild(node_float);
-            } else if (match(Tokenizer::T_OPENING_RBRACKET)) {
+            }  else if (match(Tokenizer::T_OPENING_RBRACKET)) {
                 _tokenizer->nextToken();
                 parseExpression(node_atom);
                 if (!match(Tokenizer::T_CLOSING_RBRACKET)) {

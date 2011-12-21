@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
         Tokenizer *tokenizer = new Tokenizer(*ls);
         Parser *parser = new Parser(tokenizer);
         cout << parser->getXMLTree() << endl;
+        std::string code = parser->generate();
+        cout << code << endl;
 
 //#define TOKENIZER_TEST
 #ifdef TOKENIZER_TEST

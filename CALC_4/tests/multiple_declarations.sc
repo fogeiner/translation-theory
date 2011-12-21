@@ -1,0 +1,16 @@
+def int f
+int w,
+int s
+enddef
+
+def int f
+int a,
+int b:
+return 0;
+enddef
+
+def int f
+int a,
+int b
+enddef
+

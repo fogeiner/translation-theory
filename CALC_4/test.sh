@@ -5,6 +5,8 @@ APP=./main
 SUCCESS=0
 FAIL=0
 
+make clean && make
+
 if [ ! -x ${APP} ] ; then
 	echo "${APP} not found";
 	exit 1;

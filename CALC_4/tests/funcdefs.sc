@@ -13,6 +13,6 @@ enddef
 # function with multiple parameters
 def int main3
 int var1,
-float var2,
+int var2,
 int var3 :
 enddef

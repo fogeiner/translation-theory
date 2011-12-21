@@ -8,5 +8,5 @@ int argc :
 	a = 1;
 	b = a + 2;
 	c = a + b + c;
-	d = ((a+b)-c*10)/2%2.0;
+	d = ((a+b)-c*10)/2%2;
 enddef

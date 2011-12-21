@@ -1,5 +1,5 @@
 #ifndef TOKENIZER_H
-#define	TOKENIZER_H
+#define TOKENIZER_H
 
 #include <exception>
 #include <iostream>
@@ -27,7 +27,7 @@ public:
         T_UNDEFINED, // ?
         T_ID, // abc
         T_INTEGER, // 1
-        T_FLOAT, // 1.0
+        //T_FLOAT, // 1.0
         T_PLUS, // +
         T_MINUS, // -
         T_MULT, // *
@@ -42,7 +42,7 @@ public:
         T_CLOSING_CBRACKET, // }
         T_EOF, // getc == EOF
         T_TYPE_INT, // int
-        T_TYPE_FLOAT, // float
+        //T_TYPE_FLOAT, // float
         T_PRINT, // print
         T_READ, // read
         T_WHILE, // while
@@ -58,8 +58,8 @@ public:
         T_NOT_EQUAL, // !=
         T_OPENING_SBRACKET, // [
         T_CLOSING_SBRACKET, // ]
-        T_AND, // and 
-        T_OR, // or 
+        T_AND, // and
+        T_OR, // or
         T_NOT, // not OR !
         T_FALSE, // false
         T_TRUE, // true
@@ -108,5 +108,5 @@ public:
 
 
 
-#endif	/* TOKENIZER_H */
+#endif  /* TOKENIZER_H */
 
