@@ -53,7 +53,7 @@ class Function {
 			// 4 bytes for return address
 			// 4 bytes for the saved ebp
 			_max_parameters_offset(8),
-			_max_local_variable_offset(0)
+			_max_local_variable_offset(-4)
 	{TRACE;}
 
 		void addParameter(std::string type, std::string id) {
@@ -76,12 +76,18 @@ class Function {
 			_types.insert(std::make_pair<std::string, std::string> (id, type));
 			// set offset!
 			_offsets.insert(std::make_pair<std::string, int>(id, _max_local_variable_offset));
-			_max_local_variable_offset += 4;
+			_max_local_variable_offset -= 4;
 		}
 
 		int getVariableOffset(std::string id) {
 			TRACE;
 
+			if (_types.find(id) == _types.end() &&
+					_offsets.find(id) == _offsets.end()) {
+				throw ParserException(
+						fmt("Variable %s is not defined",
+							id.c_str()));
+			}
 			assert(_types.find(id) != _types.end());
 			assert(_offsets.find(id) != _offsets.end());
 
@@ -296,7 +302,7 @@ class Node {
 		}
 
 		virtual std::string generate(Function *context) {
-			return _getDefaultXMLTag() + ": ---NOT IMPLEMENTED---\n";
+			return "<" + _getDefaultXMLTag() + ">\n"; 
 		}
 };
 
@@ -312,13 +318,30 @@ class TypeNode: public Node {
 
 
 class IdNode: public Node {
+	public:
+		IdNode(std::string id):
+			Node(id) {}
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "id";
 		}
 	public:
-		IdNode(std::string id):
-			Node(id) {}
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 0);
+
+			std::string id = getTag();
+			int offset = context->getVariableOffset(id);
+			std::string code;
+			code += fmt(
+					"# id %s\n"
+					"    pushl %d(%%ebp)\n",
+					id.c_str(), offset);
+			return code;
+		}
+
 };
 
 class FuncargsNode: public Node {
@@ -395,14 +418,21 @@ class FuncdefNode: public Node {
 				Program::addFunction(id, context);
 
 				std::string code;
-				code += fmt(".globl %s\n", id.c_str());
-				code += fmt("%s:\n", id.c_str());
-				code += fmt("pushl %%ebp\nmovl %%esp, %%ebp\n");
+				code += fmt(
+						".globl %s\n"
+						"%s:\n"
+						"    pushl %%ebp\n"
+						"    movl %%esp, %%ebp\n",
+						id.c_str(), id.c_str());
 
 				code += get(3)->generate(context);
 
-				code += fmt("popl %%ebp\n");
-				code += fmt("ret\n");
+				code += fmt(
+						"# epilogue\n"
+						"    movl %%ebp, %%esp\n"
+						"    popl %%ebp\n"
+						"    ret\n"
+						);
 				return code;
 			} else {
 				// declaration produces no code but saves meta-information
@@ -424,10 +454,12 @@ class ProgramNode: public Node {
 			assert(context == NULL);
 
 			std::string code;
-			code += ".READFORMAT:\n";
-			code += "    .string \"%d\\n\"\n";
-			code += ".PRINTFORMAT:\n";
-			code += "    .string \"%d\"\n";
+			code += fmt(
+					".READFORMAT:\n"
+				    "    .string \"%%d\"\n"
+					".PRINTFORMAT:\n"
+					"    .string \"%%d\\n\"\n"
+					);
 
 			for(node_iterator it = this->begin();
 					it != this->end(); ++it) {
@@ -435,6 +467,7 @@ class ProgramNode: public Node {
 				ASSERT_TYPE(FuncdefNode*, child);
 				code += child->generate(NULL);
 			}
+
 			return code;
 		}
 };
@@ -458,7 +491,138 @@ class ReadNode: public Node {
 
 			assert(context != NULL);
 
+			ASSERT_TYPE(IdNode*, get(0));
+			std::string id = get(0)->getTag();
+
+			int offset = context->getVariableOffset(id);
+
 			std::string code;
+			code += fmt(
+					"# read %s\n"
+					"    leal %d(%%ebp), %%eax\n"
+					"    pushl %%eax\n"
+					"    pushl $.READFORMAT\n"
+					"    call scanf\n"
+					"    addl $8, %%esp\n",
+					id.c_str(), offset);
+
+							
+			return code;
+		}
+};
+
+
+class AtomNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "atom";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1);
+
+			std::string code;
+			code += fmt(
+					"# atom\n"
+					);
+			code += get(0)->generate(context);
+
+			return code;
+		}
+};
+
+class multNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "mult";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			
+			std::string code;
+			code += fmt(
+					"# multNode\n"
+					);
+			if (childrenCount() == 1) {
+				ASSERT_TYPE(AtomNode*, get(0));
+				code += get(0)->generate(context);
+			} else {
+				ASSERT_TYPE(AtomNode*, get(0));
+				code += get(0)->generate(context);
+				// MultMultNode, ModMultNode, DivMultNode
+				code += get(1)->generate(context);
+			}
+
+			
+			return code;
+		}
+};
+
+
+class termNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "term";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+
+			std::string code;
+			code += fmt(
+					"# termNode\n"
+					);
+			if (childrenCount() == 1) {
+				ASSERT_TYPE(multNode*, get(0));
+				code += get(0)->generate(context);
+			} else {
+				ASSERT_TYPE(multNode*, get(0));
+				code += get(0)->generate(context);
+				// MultMultNode, ModMultNode, DivMultNode
+				code += get(1)->generate(context);
+			}
+			
+			return code;
+		}
+};
+
+class ExpressionNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "expression";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+
+			std::string code;
+			code += fmt(
+					"# expression\n"
+					);
+			if (childrenCount() == 1) {
+				ASSERT_TYPE(termNode*, get(0));
+				code += get(0)->generate(context);
+			} else {
+				ASSERT_TYPE(termNode*, get(0));
+				code += get(0)->generate(context);
+				// PlusTermNode or MinusTermNode
+				code += get(1)->generate(context);
+			} 
+
+			return code;
 		}
 };
 
@@ -468,6 +632,118 @@ class PrintNode: public Node {
 			return "print";
 		}
 	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1);
+			ASSERT_TYPE(ExpressionNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# print\n"
+					);
+			code += get(0)->generate(context);
+			// the result of the expression on the top of the stack
+			// no need to move anything
+			code += fmt(
+					"    push $.PRINTFORMAT\n"
+					"    call printf\n"
+					"    subl $8, %%esp\n"
+					);
+
+			return code;
+		}
+};
+
+class NegationNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "negation";
+		}
+};
+
+class PlusTermNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "plusterm";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			ASSERT_TYPE(termNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# plusterm\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    addl %%eax, %%ecx\n"
+					"    pushl %%ecx\n"
+					);
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
+		}
+};
+
+class MinusTermNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "minusterm";
+		}
+};
+
+class MultMultNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "multmult";
+		}
+};
+
+class ModMultNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "modmult";
+		}
+};
+
+class DivMultNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "divmult";
+		}
+};
+
+class IntegerNode: public Node {
+	public:
+		IntegerNode(std::string integer): Node(integer) {}
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "integer";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code = fmt(
+					"    pushl $%s\n",
+					getTag().c_str()
+					);
+
+			return code;
+		}
 };
 
 class AssignmentNode: public Node {
@@ -475,12 +751,58 @@ class AssignmentNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "assignment";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+
+			ASSERT_TYPE(IdNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			std::string id = get(0)->getTag();
+			int offset = context->getVariableOffset(id);
+
+			std::string code;
+			code += get(1)->generate(context);
+			code += fmt(
+					"# saving result of expression to %s\n"
+					"    popl %%eax\n"
+					"    movl %%eax, %d(%%ebp)\n",
+					id.c_str(), offset);
+
+			return code;
+		}
 };
 
 class DeclarationNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "declaration";
+		}
+	public:
+		std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+
+			ASSERT_TYPE(TypeNode*, get(0));
+			ASSERT_TYPE(IdNode*, get(1));
+
+			std::string type = get(0)->getTag();
+			std::string id = get(1)->getTag();
+
+			context->addLocalVariable(type, id);
+			
+			int offset = context->getVariableOffset(id);
+
+			std::string code;
+			code += fmt(
+					"# declaration %s %s offset %d\n"
+					"    subl $4, %%esp\n",
+					type.c_str(), id.c_str(), offset);
+
+			return code;
 		}
 };
 
@@ -527,7 +849,7 @@ class BdisjNode: public Node {
 };
 
 class BDisjNode: public Node {
-	private:
+	private:;
 		virtual std::string _getDefaultXMLTag() const {
 			return "bDisj";
 		}
@@ -624,84 +946,6 @@ class NotNode: public Node {
 		}
 };
 
-class ExpressionNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "expression";
-		}
-};
-
-class termNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "term";
-		}
-};
-
-class multNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "mult";
-		}
-};
-
-class NegationNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "negation";
-		}
-};
-
-class PlusTermNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "plusterm";
-		}
-};
-
-class MinusTermNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "minusterm";
-		}
-};
-
-class MultMultNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "multmult";
-		}
-};
-
-class ModMultNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "modmult";
-		}
-};
-
-class DivMultNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "divmult";
-		}
-};
-
-class AtomNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "atom";
-		}
-};
-
-class IntegerNode: public Node {
-	public:
-		IntegerNode(std::string integer): Node(integer) {}
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "integer";
-		}
-};
 
 class Parser {
 	private:
@@ -927,7 +1171,7 @@ class Parser {
 			TRACE;
 			if (match(Tokenizer::T_READ)) {
 				_tokenizer->nextToken();
-				Node *node_read = new PrintNode();
+				Node *node_read = new ReadNode();
 				parseId(node_read);
 				node->addChild(node_read);
 			} else {
