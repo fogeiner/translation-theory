@@ -701,12 +701,64 @@ class MinusTermNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "minusterm";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			ASSERT_TYPE(termNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# minusterm\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    subl %%eax, %%ecx\n"
+					"    pushl %%ecx\n"
+					);
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
+		}
 };
 
 class MultMultNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "multmult";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			ASSERT_TYPE(AtomNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# multmult\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    imull %%eax, %%ecx\n"
+					"    pushl %%ecx\n"
+					);
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
 		}
 };
 
@@ -715,12 +767,68 @@ class ModMultNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "modmult";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			ASSERT_TYPE(AtomNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# modmult\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%ecx\n"
+					"    popl %%eax\n"
+					"    movl %%eax, %%edx\n"
+					"    sarl $31, %%edx\n"
+					"    idivl %%ecx\n"
+					"    pushl %%edx\n"
+					);
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
+		}
 };
 
 class DivMultNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "divmult";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			ASSERT_TYPE(AtomNode*, get(0));
+
+			std::string code;
+			code += fmt(
+					"# divmult\n"
+					);
+			code += get(0)->generate(context);
+			code += fmt(
+					"    popl %%ecx\n"
+					"    popl %%eax\n"
+					"    movl %%eax, %%edx\n"
+					"    sarl $31, %%edx\n"
+					"    idivl %%ecx\n"
+					"    pushl %%eax\n"
+					);
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
 		}
 };
 
