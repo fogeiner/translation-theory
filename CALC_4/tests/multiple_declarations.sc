@@ -14,3 +14,8 @@ int a,
 int b
 enddef
 
+def int main
+int argc,
+int argc2,
+int argc3:
+enddef

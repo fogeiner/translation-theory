@@ -32,8 +32,6 @@ public:
     }
 };
 
-
-
 class Function {
 private:
     std::string _type;
@@ -121,7 +119,7 @@ public:
         // same amount of parameters passed in
         int parametersCount = getInputParametersCount();
         int otherParametersCount = other->getInputParametersCount();
-        DEBUG(fmt("%d %d", parametersCount, otherParametersCount));
+        DEBUG(fmt("%d vs %d", parametersCount, otherParametersCount));
         return parametersCount == otherParametersCount;
     }
 };
@@ -199,8 +197,6 @@ public:
         }
     }
 };
-
-
 
 class Node;
 std::string buildXMLTree(Node *root, int level = 0);
