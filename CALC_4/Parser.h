@@ -648,10 +648,7 @@ class ReturnNode: public Node {
 
 			code += fmt(
 					"    popl %%eax\n"
-					"    jmp %s\n"
-					"    push $.PRINTFORMAT\n"
-					"    call printf\n"
-					"    subl $8, %%esp\n",
+					"    jmp %s\n",
 					context->getEndLabel().c_str());
 
 			return code;
@@ -985,6 +982,47 @@ class FuncallNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "funcall";
+		}
+	public:
+		std::string generate(Function *context) {
+			TRACE;
+
+			assert(childrenCount() >= 1);
+			ASSERT_TYPE(IdNode*, get(0));
+			for (int i = 1; i < childrenCount(); ++i) {
+				ASSERT_TYPE(ExpressionNode*, get(i));
+			}
+
+			std::string id;
+			id = get(0)->getTag();
+
+			Function *calledFunction = Program::getFunction(id);
+			if (calledFunction == NULL) {
+				throw ParserException(fmt("Called function %s is not declared",
+							id.c_str()));
+			}
+			int inArgs = calledFunction->getInputParametersCount();
+			int inArgsActual = childrenCount() - 1;
+
+			if (inArgsActual != inArgs) {
+				throw ParserException(fmt("Function %s is declared with %d input parameters but %d are passed",
+							id.c_str(), inArgs, inArgsActual));
+			}
+
+			std::string code;
+			code += fmt(
+					"# funcall\n"
+					);
+			for (int i = childrenCount() - 1; i > 0; --i) {
+				code += get(i)->generate(context);
+			}
+
+			code += fmt(
+					"    call %s\n"
+					"    pushl %%eax",
+					id.c_str());
+
+			return code;
 		}
 };
 
@@ -1477,9 +1515,7 @@ class Parser {
 			TRACE;
 
 			if (isAtomStart()) {
-				Node *node_funcallarg = new FuncallargNode();
-				parseExpression(node_funcallarg);
-				node->addChild(node_funcallarg);
+				parseExpression(node);
 				parseFuncallargsrest(node);
 			}
 			// eps
@@ -1490,9 +1526,7 @@ class Parser {
 
 			if (match(Tokenizer::T_COMMA)) {
 				_tokenizer->nextToken();
-				Node *node_expression = new ExpressionNode();
-				parseExpression(node_expression);
-				node->addChild(node_expression);
+				parseExpression(node);
 				parseFuncallargsrest(node);
 			}
 			// eps
