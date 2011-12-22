@@ -1,3 +1,8 @@
+def int getPi 
+int a:
+	return 3;
+enddef
+
 def int main
 int argc :
 	int a;
@@ -12,6 +17,3 @@ int argc :
 	done
 enddef
 
-def int getPi :
-	return 3;
-enddef

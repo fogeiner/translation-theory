@@ -12,8 +12,6 @@
 #include <list>
 #include <algorithm>
 
-#include <iostream>
-
 #define ASSERT_TYPE(X,Y) assert(dynamic_cast<X>(Y) != NULL)
 
 std::string getNextMarker();
@@ -57,10 +55,10 @@ class Function {
 			// 4 bytes for the saved ebp
 			_max_parameters_offset(8),
 			_max_local_variable_offset(-4)
-		{
-			TRACE;
-			_endMarker = getNextMarker();
-		}
+	{
+		TRACE;
+		_endMarker = getNextMarker();
+	}
 
 		void addParameter(std::string type, std::string id) {
 			TRACE;
@@ -470,7 +468,7 @@ class ProgramNode: public Node {
 			std::string code;
 			code += fmt(
 					".READFORMAT:\n"
-				    "    .string \"%%d\"\n"
+					"    .string \"%%d\"\n"
 					".PRINTFORMAT:\n"
 					"    .string \"%%d\\n\"\n"
 					);
@@ -514,7 +512,7 @@ class ReadNode: public Node {
 					"    addl $8, %%esp\n",
 					id.c_str(), offset);
 
-							
+
 			return code;
 		}
 };
@@ -553,7 +551,7 @@ class multNode: public Node {
 
 			assert(context != NULL);
 			assert((childrenCount() == 1) || (childrenCount() == 2));
-			
+
 			std::string code;
 			code += fmt(
 					"# multNode\n"
@@ -568,7 +566,7 @@ class multNode: public Node {
 				code += get(1)->generate(context);
 			}
 
-			
+
 			return code;
 		}
 };
@@ -599,7 +597,7 @@ class termNode: public Node {
 				// MultMultNode, ModMultNode, DivMultNode
 				code += get(1)->generate(context);
 			}
-			
+
 			return code;
 		}
 };
@@ -960,7 +958,7 @@ class DeclarationNode: public Node {
 			std::string id = get(1)->getTag();
 
 			context->addLocalVariable(type, id);
-			
+
 			int offset = context->getVariableOffset(id);
 
 			std::string code;
@@ -1071,57 +1069,57 @@ class BdisjNode: public Node {
 				code += get(1)->generate(context);
 			} 
 			return code; 
-	}
+		}
 };
 
 
 class BDisjNode: public Node {
 	private:;
-		virtual std::string _getDefaultXMLTag() const {
-			return "bDisj";
-		}
-	public: 
-		virtual std::string generate(Function *context) {
-			TRACE;
-
-			assert(context != NULL);
-			assert(childrenCount() == 1 || childrenCount() == 2);
-			ASSERT_TYPE(BdisjNode*, get(0));
-			if (childrenCount() == 2) {
-				ASSERT_TYPE(BDisjNode*, get(1));
-			}   
-
-			std::string code;
-
-			code += fmt(
-					"# BDisjNode\n"
-					);
-			code += get(0)->generate(context);
-
-			std::string ifElseMarker = getNextMarker();
-			std::string endifMarker = getNextMarker();
-			code += fmt(
-					"    popl %%eax\n"
-					"    popl %%ecx\n"
-					"    addl %%ecx, %%eax\n"
-					"    cmpl $0, %%eax\n"
-					"    je %s\n"
-					"    pushl $1\n"
-					"    jmp %s\n"
-					"%s:\n"
-					"    pushl $0\n"
-					"%s:\n",
-					ifElseMarker.c_str(),
-					endifMarker.c_str(),
-					ifElseMarker.c_str(),
-					endifMarker.c_str());
-
-			if (childrenCount() == 2) {
-				code += get(1)->generate(context);
+			virtual std::string _getDefaultXMLTag() const {
+				return "bDisj";
 			}
+	public: 
+			virtual std::string generate(Function *context) {
+				TRACE;
 
-			return code;
-		}
+				assert(context != NULL);
+				assert(childrenCount() == 1 || childrenCount() == 2);
+				ASSERT_TYPE(BdisjNode*, get(0));
+				if (childrenCount() == 2) {
+					ASSERT_TYPE(BDisjNode*, get(1));
+				}   
+
+				std::string code;
+
+				code += fmt(
+						"# BDisjNode\n"
+						);
+				code += get(0)->generate(context);
+
+				std::string ifElseMarker = getNextMarker();
+				std::string endifMarker = getNextMarker();
+				code += fmt(
+						"    popl %%eax\n"
+						"    popl %%ecx\n"
+						"    addl %%ecx, %%eax\n"
+						"    cmpl $0, %%eax\n"
+						"    je %s\n"
+						"    pushl $1\n"
+						"    jmp %s\n"
+						"%s:\n"
+						"    pushl $0\n"
+						"%s:\n",
+						ifElseMarker.c_str(),
+						endifMarker.c_str(),
+						ifElseMarker.c_str(),
+						endifMarker.c_str());
+
+				if (childrenCount() == 2) {
+					code += get(1)->generate(context);
+				}
+
+				return code;
+			}
 };
 
 
@@ -1179,7 +1177,7 @@ class IfNode: public Node {
 				ifThenCode = get(1)->generate(context);
 				ifElseCode = get(2)->generate(context);
 			}
-				
+
 
 
 			std::string code;
@@ -1217,6 +1215,41 @@ class WhileNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "while";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(childrenCount() == 2);
+			ASSERT_TYPE(BexpressionNode*, get(0));
+			ASSERT_TYPE(StatementsNode*, get(1));
+			std::string code;
+			std::string startMarker = getNextMarker();
+			std::string condMarker = getNextMarker();
+
+			std::string bexprCode = get(0)->generate(context);
+			std::string statementsCode = get(1)->generate(context);
+
+			code = fmt(
+					"# while\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"%s"
+					"%s:\n"
+					"%s"
+					"    popl %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    jne %s\n"
+					,
+					condMarker.c_str(),
+					startMarker.c_str(),
+					statementsCode.c_str(),
+					condMarker.c_str(),
+					bexprCode.c_str(),
+					startMarker.c_str()
+					);
+
+			return code;
 		}
 };
 
@@ -2313,7 +2346,6 @@ class Parser {
 		}
 
 };
-
 
 
 #endif
