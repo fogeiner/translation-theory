@@ -31,6 +31,12 @@ std::string buildXMLTree(Node *root, int level) {
 
 std::map<std::string, Function *> Program::_functions;
 std::map<std::string, bool> Program::_declarationMask;
+int _max_marker_counter = 0;
+std::string getNextMarker() {
+	std::string marker = fmt(".M%03d", _max_marker_counter);
+	_max_marker_counter = _max_marker_counter + 1;
+	return marker;
+}   
 
 
 int main2() {

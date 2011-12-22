@@ -16,6 +16,8 @@
 
 #define ASSERT_TYPE(X,Y) assert(dynamic_cast<X>(Y) != NULL)
 
+std::string getNextMarker();
+
 class ParserException : public std::exception {
 	private:
 		std::string _msg;
@@ -31,13 +33,14 @@ class ParserException : public std::exception {
 			return _msg.c_str();
 		}
 };
-
 class Function {
 	private:
 		std::string _type;
 		std::string _name;
 		std::map<std::string, std::string> _types;
 		std::map<std::string, int> _offsets;
+
+		std::string _endMarker;
 
 		int _max_parameters_offset;
 		int _max_local_variable_offset;
@@ -54,7 +57,10 @@ class Function {
 			// 4 bytes for the saved ebp
 			_max_parameters_offset(8),
 			_max_local_variable_offset(-4)
-	{TRACE;}
+		{
+			TRACE;
+			_endMarker = getNextMarker();
+		}
 
 		void addParameter(std::string type, std::string id) {
 			TRACE;
@@ -129,9 +135,10 @@ class Function {
 			return parametersCount == otherParametersCount;
 		}
 
-		std::string getEndLabel() const {
-			return fmt(".%send", _name.c_str());
+		std::string getEndMarker() const {
+			return _endMarker;
 		}
+
 };
 
 /**
@@ -145,7 +152,9 @@ class Program {
 		static std::map<std::string, Function *> _functions;
 		// true if the function is declaration; false otherwise
 		static std::map<std::string, bool> _declarationMask;
+		// counter for function internal marks
 	public:
+
 		static void addDeclaration(std::string id, Function *function) {
 			TRACE;
 			if (_declarationMask.find(id) != _declarationMask.end()) {
@@ -437,7 +446,7 @@ class FuncdefNode: public Node {
 						"    movl %%ebp, %%esp\n"
 						"    popl %%ebp\n"
 						"    ret\n",
-						context->getEndLabel().c_str());
+						context->getEndMarker().c_str());
 				return code;
 			} else {
 				// declaration produces no code but saves meta-information
@@ -649,7 +658,7 @@ class ReturnNode: public Node {
 			code += fmt(
 					"    popl %%eax\n"
 					"    jmp %s\n",
-					context->getEndLabel().c_str());
+					context->getEndMarker().c_str());
 
 			return code;
 		}
@@ -676,7 +685,7 @@ class PrintNode: public Node {
 			// the result of the expression on the top of the stack
 			// no need to move anything
 			code += fmt(
-					"    push $.PRINTFORMAT\n"
+					"    pushl $.PRINTFORMAT\n"
 					"    call printf\n"
 					"    subl $8, %%esp\n"
 					);
@@ -964,11 +973,96 @@ class DeclarationNode: public Node {
 		}
 };
 
+class BexpressionNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "bexpression";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			if (childrenCount() == 1) {
+				ASSERT_TYPE(BdisjNode*, get(0));
+			} else {
+				ASSERT_TYPE(BdisjNode*, get(0));
+				ASSERT_TYPE(BDisjNode*, get(1));
+			}
+		}
+};
+
 class IfNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "if";
 		}
+	public: 
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 2 || childrenCount() == 3);
+			ASSERT_TYPE(BexpressionNode*, get(0));
+			ASSERT_TYPE(StatementsNode*, get(1));
+			if (childrenCount() == 3) {
+				ASSERT_TYPE(StatementsNode*, get(2));
+			}   
+
+			std::string ifThenCode;
+			std::string ifElseCode;
+			if (childrenCount() == 2) {
+				ifThenCode = get(1)->generate(context);
+			} else{
+				ifThenCode = get(1)->generate(context);
+				ifElseCode = get(2)->generate(context);
+			}
+				
+
+			std::string ifElseMarker = getNextMarker();
+			std::string endifMarker = getNextMarker();
+
+			std::string code;
+
+			code += fmt(
+					"# if\n"
+					);
+
+			code += get(0)->generate(context);
+
+			// there are zero on non-zero on
+			// the top of stack
+			// zero -> false; non-zero -> true
+			// popl %eax
+			// cmpl $0, %eax
+			// je .ELSE
+			// <THEN>
+			// jmp .IFEND
+			// .ELSE:
+			// <ELSE>
+			// .IFEND
+	
+			code += fmt(
+					"# if\n"
+					"    popl %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    je %s\n"
+					"%s"
+					"    jmp %s\n"
+					"%s:\n"
+					"%s"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifThenCode.c_str(),
+					endifMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifElseCode.c_str(),
+					endifMarker.c_str());
+
+			return code;
+		}
+
 };
 
 class WhileNode: public Node {
@@ -1031,13 +1125,6 @@ class FuncallargNode: public Node {
 	private:
 		std::string _getDefaultXMLTag() const {
 			return "funcallarg";
-		}
-};
-
-class BexpressionNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "bexpression";
 		}
 };
 
