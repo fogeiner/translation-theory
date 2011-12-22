@@ -1019,8 +1019,9 @@ class FuncallNode: public Node {
 
 			code += fmt(
 					"    call %s\n"
-					"    pushl %%eax",
-					id.c_str());
+					"    pushl %%eax"
+					"    subl $%d, %%esp",
+					id.c_str(), 4 * inArgsActual);
 
 			return code;
 		}

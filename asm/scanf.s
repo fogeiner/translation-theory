@@ -4,7 +4,7 @@
 	.string	"%d\n"
 	.globl	main
 main:
-	pushl	%ebp
+	pushl	%ebp # fs
 	movl	%esp, %ebp
 
 	subl	$32, %esp
