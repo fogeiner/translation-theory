@@ -1211,6 +1211,58 @@ class IfNode: public Node {
 
 };
 
+class ForNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "for";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 4);
+			ASSERT_TYPE(AssignmentNode*, get(0));
+			ASSERT_TYPE(BexpressionNode*, get(1));
+			ASSERT_TYPE(AssignmentNode*, get(2));
+			ASSERT_TYPE(StatementsNode*, get(3));
+
+			std::string 
+					startMarker		= getNextMarker(),
+					condMarker		= getNextMarker(),
+					assignment1Code	= get(0)->generate(context),
+					assignment2Code	= get(2)->generate(context),
+					bexprCode		= get(1)->generate(context),
+					statementsCode	= get(3)->generate(context);
+
+			std::string code;
+
+			code = fmt(
+					"# for\n"
+					"%s"
+					"    jmp %s\n"
+					"%s:\n"
+					"%s"
+					"%s"
+					"%s:\n"
+					"%s"
+					"    popl %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    jne %s\n"
+					,
+					assignment1Code.c_str(),
+					condMarker.c_str(),
+					startMarker.c_str(),
+					statementsCode.c_str(),
+					assignment2Code.c_str(),
+					condMarker.c_str(),
+					bexprCode.c_str(),
+					startMarker.c_str()
+					);
+			return code;
+		}
+};
+
 class WhileNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
@@ -1814,7 +1866,10 @@ class Parser {
 		void parseStatements(Node *node) {
 			TRACE;
 
-			if (match(Tokenizer::T_WHILE)) {
+			if (match(Tokenizer::T_FOR)) {
+				parseFor(node);
+				parseStatements(node);
+			} else if (match(Tokenizer::T_WHILE)) {
 				parseWhile(node);
 				parseStatements(node);
 			} else if (match(Tokenizer::T_IF)) {
@@ -1923,7 +1978,46 @@ class Parser {
 			}
 		}
 
-		void parseWhile(Node *node) { // TODO:
+		void parseFor(Node *node) {
+			TRACE;
+
+			if (match(Tokenizer::T_FOR)) {
+				_tokenizer->nextToken();
+
+				Node *node_for = new ForNode();
+
+				parseAssignment(node_for);
+				if (!match(Tokenizer::T_SEMICOLON)) {
+					throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+				}
+				_tokenizer->nextToken();
+				
+				parseBexpression(node_for);
+				if (!match(Tokenizer::T_SEMICOLON)) {
+					throw PARSER_EXPECTED(Tokenizer::T_SEMICOLON);
+				}
+				_tokenizer->nextToken();
+				
+				parseAssignment(node_for);
+				if (!match(Tokenizer::T_DO)) {
+					throw PARSER_EXPECTED(Tokenizer::T_DO);
+				}
+				_tokenizer->nextToken();
+				
+				Node *node_statements = new StatementsNode();
+				parseStatements(node_statements);
+				node_for->addChild(node_statements);
+				if (!match(Tokenizer::T_DONE)) {
+					throw PARSER_EXPECTED(Tokenizer::T_DONE);
+				}
+				_tokenizer->nextToken();
+
+				node->addChild(node_for);
+			} else {
+				throw PARSER_EXPECTED(Tokenizer::T_FOR);
+			}
+		}
+		void parseWhile(Node *node) {
 			TRACE;
 			if (match(Tokenizer::T_WHILE)) {
 				_tokenizer->nextToken();

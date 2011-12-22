@@ -47,6 +47,7 @@ map<Tokenizer::ValueType, string> Tokenizer::_valueTypeTags =
 //(T_TYPE_FLOAT, "Float type")
 (T_READ, "Read operation")
 (T_PRINT, "Print operation")
+(T_FOR, "For")
 (T_WHILE, "While")
 (T_IF, "If")
 (T_ELSE, "Else")
@@ -284,6 +285,8 @@ Tokenizer::ValueType Tokenizer::nextToken() {
                 _type = T_READ;
             } else if (token == "print") {
                 _type = T_PRINT;
+			} else if (token == "for") {
+				_type = T_FOR;
             } else if (token == "while") {
                 _type = T_WHILE;
             } else if (token == "if") {

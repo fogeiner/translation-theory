@@ -45,6 +45,7 @@ public:
         //T_TYPE_FLOAT, // float
         T_PRINT, // print
         T_READ, // read
+		T_FOR, // for
         T_WHILE, // while
         T_IF, // if
         T_ELSE, // else

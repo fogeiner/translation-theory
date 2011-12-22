@@ -20,7 +20,7 @@ using std::string;
 using std::exception;
 
 int main(int argc, char** argv) {
-    Logger::setLevel(Logger::DEBUG);
+    Logger::setLevel(Logger::SILENT);
 
     if (argc <= 1) {
         CRITICAL(fmt("Usage: %s [file|-]", argv[0]));
@@ -37,7 +37,10 @@ int main(int argc, char** argv) {
 
         Tokenizer *tokenizer = new Tokenizer(*ls);
         Parser *parser = new Parser(tokenizer);
+//#define TREE_BUILD_TEST
+#ifdef TREE_BUILD_TEST
         cout << parser->getXMLTree() << endl;
+#endif
         std::string code = parser->generate();
         cout << code << endl;
 
