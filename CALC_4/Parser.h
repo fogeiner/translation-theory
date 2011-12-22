@@ -973,6 +973,73 @@ class DeclarationNode: public Node {
 		}
 };
 
+class BAtomNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "batom";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1);
+
+			std::string code;
+			code += fmt(
+					"# batom\n"
+					);
+
+			code += get(0)->generate(context);
+			return code;
+		}
+};
+
+class BConjNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "bConj";
+		}
+};
+
+
+
+class BdisjNode: public Node {
+	private:
+		virtual std::string _getDefaultXMLTag() const {
+			return "bdisj";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+			assert(context != NULL);
+			assert((childrenCount() == 1) || (childrenCount() == 2));
+			std::string code;
+			code += fmt(
+					"# BdisjNode\n"
+					);
+			if (childrenCount() == 1) {
+				ASSERT_TYPE(BAtomNode*, get(0));
+				code += get(0)->generate(context);
+			} else {
+				ASSERT_TYPE(BAtomNode*, get(0));
+				ASSERT_TYPE(BConjNode*, get(1));
+				code += get(0)->generate(context);
+				code += get(1)->generate(context);
+			} 
+			return code; 
+	}
+};
+
+
+class BDisjNode: public Node {
+	private:;
+		virtual std::string _getDefaultXMLTag() const {
+			return "bDisj";
+		}
+};
+
+
 class BexpressionNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
@@ -984,12 +1051,21 @@ class BexpressionNode: public Node {
 
 			assert(context != NULL);
 			assert((childrenCount() == 1) || (childrenCount() == 2));
+			std::string code;
+			code += fmt(
+					"# bexpression\n"
+					);
 			if (childrenCount() == 1) {
 				ASSERT_TYPE(BdisjNode*, get(0));
+				code += get(0)->generate(context);
 			} else {
 				ASSERT_TYPE(BdisjNode*, get(0));
 				ASSERT_TYPE(BDisjNode*, get(1));
+				code += get(0)->generate(context);
+				code += get(1)->generate(context);
 			}
+
+			return code;
 		}
 };
 
@@ -1020,8 +1096,6 @@ class IfNode: public Node {
 			}
 				
 
-			std::string ifElseMarker = getNextMarker();
-			std::string endifMarker = getNextMarker();
 
 			std::string code;
 
@@ -1031,20 +1105,9 @@ class IfNode: public Node {
 
 			code += get(0)->generate(context);
 
-			// there are zero on non-zero on
-			// the top of stack
-			// zero -> false; non-zero -> true
-			// popl %eax
-			// cmpl $0, %eax
-			// je .ELSE
-			// <THEN>
-			// jmp .IFEND
-			// .ELSE:
-			// <ELSE>
-			// .IFEND
-	
+			std::string ifElseMarker = getNextMarker();
+			std::string endifMarker = getNextMarker();
 			code += fmt(
-					"# if\n"
 					"    popl %%eax\n"
 					"    cmpl $0, %%eax\n"
 					"    je %s\n"
@@ -1128,38 +1191,10 @@ class FuncallargNode: public Node {
 		}
 };
 
-class BdisjNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "bdisj";
-		}
-};
-
-class BDisjNode: public Node {
-	private:;
-		virtual std::string _getDefaultXMLTag() const {
-			return "bDisj";
-		}
-};
-
 class BconjNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "bconj";
-		}
-};
-
-class BConjNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "bConj";
-		}
-};
-
-class BAtomNode: public Node {
-	private:
-		virtual std::string _getDefaultXMLTag() const {
-			return "batom";
 		}
 };
 
@@ -1175,12 +1210,88 @@ class CmpLessNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmpless";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp less\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%ecx\n"
+					"    popl %%eax\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    jge %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
+		}
 };
 
 class CmpGreaterNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmpgreater";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp greater\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    jge %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
 		}
 };
 
@@ -1189,12 +1300,88 @@ class CmpLessOrEqualNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmplessorequal";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp less or equal\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    jl %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
+		}
 };
 
 class CmpGreaterOrEqualNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmpgreaterorequal";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp greater or equal\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    jg %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
 		}
 };
 
@@ -1203,12 +1390,88 @@ class CmpEqualNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmpequal";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp equal\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    jne %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
+		}
 };
 
 class CmpNotEqualNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "cmpnotequal";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			std::string code;
+			code += fmt(
+					"# cmp not equal\n"
+					);
+
+			ASSERT_TYPE(ExpressionNode*, get(0));
+			ASSERT_TYPE(ExpressionNode*, get(1));
+
+			code += get(0)->generate(context);
+			code += get(1)->generate(context);
+
+			// take 2 values from
+			// stack; if true -- pushl $1
+			// else -- pushl $0
+			std::string ifElseMarker = getNextMarker();
+			std::string ifendMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    cmpl %%ecx, %%eax\n"
+					"    je %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					ifendMarker.c_str(),
+					ifElseMarker.c_str(),
+					ifendMarker.c_str());
+
+			return code;
 		}
 };
 
@@ -1217,6 +1480,20 @@ class TrueNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "true";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 0);
+
+			std::string code;
+			code += fmt(
+					"# true\n"
+					"    pushl $1\n"
+					);
+			return code;
+		}
 };
 
 class FalseNode: public Node {
@@ -1224,12 +1501,58 @@ class FalseNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "false";
 		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 0);
+
+			std::string code;
+			code += fmt(
+					"# false\n"
+					"    pushl $0\n"
+					);
+			return code;
+		}
 };
 
 class NotNode: public Node {
 	private:
 		virtual std::string _getDefaultXMLTag() const {
 			return "not";
+		}
+	public:
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1);
+			ASSERT_TYPE(BAtomNode*, get(0));
+
+			std::string code;
+			code += fmt (
+					"# not\n"
+					);
+
+			code += get(0)->generate(context);
+
+			std::string ifElseMarker = getNextMarker();
+			std::string endifMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    je %s\n"
+					"    pushl $0\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $1\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					endifMarker.c_str(),
+					ifElseMarker.c_str(),
+					endifMarker.c_str());
+			return code;
 		}
 };
 
