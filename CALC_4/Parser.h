@@ -1000,6 +1000,49 @@ class BConjNode: public Node {
 		virtual std::string _getDefaultXMLTag() const {
 			return "bConj";
 		}
+	public: 
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1 || childrenCount() == 2);
+			ASSERT_TYPE(BAtomNode*, get(0));
+			if (childrenCount() == 2) {
+				ASSERT_TYPE(BConjNode*, get(1));
+			}   
+
+			std::string code;
+
+			code += fmt(
+					"# BConjNode\n"
+					);
+			code += get(0)->generate(context);
+
+			std::string ifElseMarker = getNextMarker();
+			std::string endifMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    subl %%ecx, %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    je %s\n"
+					"    pushl $0\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $1\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					endifMarker.c_str(),
+					ifElseMarker.c_str(),
+					endifMarker.c_str());
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
+		}
+
 };
 
 
@@ -1036,6 +1079,48 @@ class BDisjNode: public Node {
 	private:;
 		virtual std::string _getDefaultXMLTag() const {
 			return "bDisj";
+		}
+	public: 
+		virtual std::string generate(Function *context) {
+			TRACE;
+
+			assert(context != NULL);
+			assert(childrenCount() == 1 || childrenCount() == 2);
+			ASSERT_TYPE(BdisjNode*, get(0));
+			if (childrenCount() == 2) {
+				ASSERT_TYPE(BDisjNode*, get(1));
+			}   
+
+			std::string code;
+
+			code += fmt(
+					"# BDisjNode\n"
+					);
+			code += get(0)->generate(context);
+
+			std::string ifElseMarker = getNextMarker();
+			std::string endifMarker = getNextMarker();
+			code += fmt(
+					"    popl %%eax\n"
+					"    popl %%ecx\n"
+					"    addl %%ecx, %%eax\n"
+					"    cmpl $0, %%eax\n"
+					"    je %s\n"
+					"    pushl $1\n"
+					"    jmp %s\n"
+					"%s:\n"
+					"    pushl $0\n"
+					"%s:\n",
+					ifElseMarker.c_str(),
+					endifMarker.c_str(),
+					ifElseMarker.c_str(),
+					endifMarker.c_str());
+
+			if (childrenCount() == 2) {
+				code += get(1)->generate(context);
+			}
+
+			return code;
 		}
 };
 
