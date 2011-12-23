@@ -14,5 +14,11 @@ if [ ! -x ${COMPILER} ] ; then
 fi
 
 ${COMPILER} "$1" > ${TMP_PATH}
+if [ "X$?" != "X0" ] ; then
+	echo 'Translation failed'
+fi
 gcc -m32 -o "$2" ${TMP_PATH}
 
+if [ "X$?" != "X0" ] ; then
+	echo 'Compilation failed'
+fi
