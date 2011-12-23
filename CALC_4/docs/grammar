@@ -1,76 +1,71 @@
-<type> ::= int | float
-<id> ::= 
-<number> ::= 
+<type> ::= int // done
+<id> ::=  // done
+<number> ::= // done
 
-<program> ::= <funcdefs>
+<program> ::= <funcdefs> // done
 
 <funcdefs> ::= <funcdef> <funcdefs> | eps
-<funcdef> ::= def <type> <id> <funargs> : <statements> enddef
-<funargs> ::= <type> <id> | , <type> <id> <funargs> | eps
+<funcdef> ::=	{with body} def <type> <id> <funargs> : <statements> enddef 
+| {without body} def <type> <id> <funargs> enddef
+<funargs> ::= <type> <id> <funargsrest> | eps
+<funargsrest> ::= , <type> <id> <funargsrest> | eps
 
-<statements> ::= <statement> <statements> | eps
-<statement> ::= <while> | <if> | <expression>; | <declaration>; | <assignment>; | <return>; | <print>; | <read>; 
+<statements> ::= "<statement>" <statements> | eps
+"<statement>" ::= <while> // done
+| <for>
+| <if>  // done
+| <declaration>;  // done
+| <assignment>;  // done
+| <return>; // done
+| <print>;  // done
+| <read>;  // done
 
-<print> ::= print <id>
-<read> ::= read <id>
+<for> ::= for <assignment> ; <bexpression> ; <assigment> do <statements> done
 
-<funcall> ::= <id> <funcallargs>
-<funcallargs> ::= <expression> | <expression>, <funcallargs> | eps
+<print> ::= print <expression> // evaluates and prints expression with printf, done
+<read> ::= read <id> // reads to id memory place with scanf, done
 
-<return> ::= return <expression>
-<while> ::= while <condition> do <statements> done
+<funcall> ::= {<id> <funcallargs>}
+<funcallargs> ::= <expression> <funcallargs>  <funcallargsrest> | eps
+<funcallargsrest> ::= , <expression> <funcallargsrest> | eps
+
+<return> ::= return <expression> // return 
+<while> ::= while <bexpression> do <statements> done
 <if> ::= if <bexpression> then <statements> fi | if <bexpression> then <statements> else <statements> <fi>
 
-<bexpression> ::= <bfactor> <Bfactor> | <bfactor>
-<Bfactor> ::= {and or} <bfactor> <Bfactor> | {and or} <bfactor>
-<bfactor> ::= <expression> {< > <= >= == !=} <expression> | not <bfactor> | (bexpression) | true | false 
+<bexpression> ::= <bdisj> <Bdisj> | <bdisj> // done
+<bConj> ::= and <batom> <bConj> | and <batom> // done
+<bDisj> ::= or <bdisj> <bDisj> | or <bdisj> // done
+<bdisj> ::= <batom> <bConj> | <batom> // done 
+<batom> ::= "<cmp>" | not <batom> | [<bexpression>] | true | false  // done
 
-<expression> ::= <term> <Term> | <term>
-<Term> ::= ± <term> <Term> | ± <term>  
-<term> ::= <mult> <Mult> | <mult>
-<Mult> ::= *%/ <atom> <Mult> | *%/ <atom>
-<mult> ::= <atom> <Mult> | <atom>
-<atom> ::= <id> | <number> | (<expression>) | ±<atom> | <funcall>
+"<cmp>" ::= <cmpless> | <cmpgreater> | <cmplessorequal> | <cmpgreaterorequal> | <cmpequal> | <cmpnotequal>
+<cmpless> ::= <expression> {< } <expression>
+<cmpgreater> ::= <expression> { > } <expression>
+<cmplessorequal> ::= <expression> { <= } <expression>
+<cmpgreaterorequal> ::= <expression> {>= } <expression>
+<cmpequal> ::= <expression> { == } <expression>
+<cmpnotequal> ::= <expression> { != } <expression>
 
-<declaration> ::= <type> <id> <declaration2> | <type> <id> = <expression> <declaration2>
-<declaration2> ::= ,  <type> <id> | , <type> <id> = <expression> | eps
-<assignment> ::= <id> = <expression>
+<expression> ::= <term> <Term> | <term> // done
+<Term> ::= "± <term>" <Term> | "± <term>" // done
+<term> ::= <mult> <Mult> | <mult> // done
+<Mult> ::= "*%/ <atom>" <Mult> | "*%/ <atom>" //done
+<mult> ::= <atom> <Mult> | <atom> // done
+<atom> ::= <id> // done
+| <number>  // done
+| (<expression>)  // done
+| "±<atom>"  // done
+| <funcall> // done
+"± <term>" :
+<plusterm> ::= + <term> // done
+<minusterm> ::= - <term> // done
+"*%/ <mult>":
+<multmult> ::= * <mult> // done
+<modmult> ::= % <mult> // done
+<divmult> ::= / <mult> // done
+"± <atom>":
+<negation> ::= - <atom> // done
 
-code sample
-
-def float getF  
-float a, float b:
-float c;
-c = a + b;
-return c;
-enddef
-
-def int main:
-int i = 0;
-int j =0;
-float n = getF i j;
-float m = 0.0;
-
-while i < 10 do
-m = m + n/i;
-done
-
-if m < 5 then
-print(m);
-if i < 5 then
-print i;
-fi
-else
-print n;
-fi
-	
-
-i = 0;
-j = 0;
-while i < 10 do
-while j < 10 do
-print i * j;
-done
-done
-enddef
-
+<declaration> ::= <type> <id>   allocates another local variable on the stack i.e. -n(%ebp)   done
+<assignment> ::= <id> = <expression>   evaluates expression and makes movl from tmp value of expr to memory   done
